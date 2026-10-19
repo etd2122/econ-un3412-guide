@@ -76,9 +76,9 @@ code{background:var(--code-bg);padding:1px 5px;border-radius:4px}
 pre{background:var(--code-bg);border:1px solid var(--rule);padding:12px 14px;border-radius:6px;overflow-x:auto;line-height:1.45;max-width:100%}
 pre code{background:none;padding:0}
 details{border:1px solid var(--rule);border-radius:8px;background:var(--surface);margin:10px 0;max-width:80ch}
-details>summary{cursor:pointer;padding:10px 14px;font-weight:600;list-style:none;display:flex;gap:10px;align-items:baseline}
+details>summary{cursor:pointer;padding:10px 14px 10px 36px;font-weight:600;list-style:none;display:block;position:relative;overflow-wrap:anywhere}
 details>summary::-webkit-details-marker{display:none}
-details>summary::before{content:"+";font-family:var(--f-mono);color:var(--accent);width:1ch}
+details>summary::before{content:"+";font-family:var(--f-mono);color:var(--accent);position:absolute;left:14px}
 details[open]>summary::before{content:"−"}
 details>.body{padding:0 16px 12px 16px;border-top:1px dashed var(--rule)}
 .ans{border-left:3px solid var(--ok);background:var(--ok-soft);padding:8px 12px;border-radius:0 6px 6px 0;margin:8px 0}
@@ -139,7 +139,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
     <li><a href="#overview">Exam overview</a></li>
     <li><a href="#plan">Study schedule</a></li>
     <li><a href="#formulas">Formula sheet</a></li>
-    <li><a href="#output">Reading Stata/R output</a></li>
+    <li><a href="#output">Reading R output</a></li>
   </ul>
   <h4>Lecture notes</h4>
   <ul>
@@ -264,30 +264,163 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
 </section>
 
 <section class="block" id="output">
-  <h2>Reading Stata and R output</h2>
-  <p class="lede">The college line from Lectures 7–9, annotated. Every midterm-style output question asks you to pull these numbers out.</p>
-<pre><code>. regress earnings sat, robust
+  <h2>Reading R output, line by line</h2>
+  <p class="lede">Every number R prints, what it means, and how to say it in words. The examples use the earnings-and-height data from PS2 (17,870 workers; earnings in 2012 dollars, height in inches). Stata prints the same numbers with different labels; the table at the end maps them.</p>
 
-Linear regression                     Number of obs =    988   ← n
-                                      F(1, 986)     = 663.56   ← = t² in a one-regressor model
-                                      R-squared     = 0.5067   ← share of var(Y) the line explains
-                                      Root MSE      =  10982   ← SER: typical miss, in units of Y
-------------------------------------------------------------------------------
-             |               Robust
-    earnings | Coefficient std. err.      t    P>|t|     [95% conf. interval]
--------------+----------------------------------------------------------------
-         sat |   75.61948   2.935571   25.76   0.000      69.8588    81.38017
-       _cons |  -30165.53    3346.25   -9.01   0.000    -36732.12   -23598.94
-------------------------------------------------------------------------------
-               ↑ β̂          ↑ SE(β̂)   ↑ β̂/SE  ↑ 2Φ(−|t|)  ↑ β̂ ± 1.96·SE</code></pre>
-<pre><code># R equivalent
-fit &lt;- lm(earnings ~ sat, data = col)
-coeftest(fit, vcov = vcovHC(fit, type = "HC1"))   # robust SEs, same as Stata's ", robust"
-coefci(fit,  vcov. = vcovHC(fit, type = "HC1"))   # 95% CI
-summary(fit)$r.squared ; summary(fit)$sigma        # R² and SER</code></pre>
-  <div class="tip"><p>The t and p columns always test \(H_0:\beta=0\). To test any other value (say \(\beta_1=80\)) compute \(t=(75.62-80)/2.936=-1.49\) yourself. Equivalent shortcut: is 80 inside the CI? It is (69.9 to 81.4), so you fail to reject.</p></div>
-  <div class="tip"><p>Units carry through. If Y is rescaled by \(c\), the slope, intercept, SEs and SER all scale by \(c\); t, p and R² do not change. If X is rescaled by \(c\), the slope and its SE divide by \(c\).</p></div>
+  <h3>Which command prints what</h3>
+  <div class="tw"><table>
+  <tr><th>Command</th><th>What it prints</th><th>Use it for</th></tr>
+  <tr><td><code>fit &lt;- lm(earnings ~ height, data = eh)</code></td><td>Nothing. It stores the regression in <code>fit</code>.</td><td>Running OLS</td></tr>
+  <tr><td><code>coeftest(fit, vcov = vcovHC(fit, type = "HC1"))</code></td><td>Coefficients with <b>robust</b> SEs, t, p</td><td>Every test and SE you report (course rule)</td></tr>
+  <tr><td><code>coefci(fit, vcov. = vcovHC(fit, type = "HC1"))</code></td><td>Robust 95% confidence intervals</td><td>CIs</td></tr>
+  <tr><td><code>summary(fit)</code></td><td>Residuals, coefficients with <b>non-robust</b> SEs, SER, R², adjusted R², F</td><td>Fit statistics only (R², SER)</td></tr>
+  <tr><td><code>summary(fit)$r.squared</code>, <code>$sigma</code></td><td>Just R², just the SER</td><td>Quick fit numbers</td></tr>
+  <tr><td><code>anova(fit)</code></td><td>Explained and residual sums of squares</td><td>TSS = ESS + SSR</td></tr>
+  <tr><td><code>coef(fit)</code>, <code>fitted(fit)</code>, <code>resid(fit)</code></td><td>β̂'s, predictions Ŷ, residuals û</td><td>Predictions for one observation</td></tr>
+  </table></div>
+  <p><code>coeftest</code> and <code>coefci</code> come from the <code>lmtest</code> package and <code>vcovHC</code> from <code>sandwich</code>, so every script starts with <code>library(sandwich); library(lmtest)</code>.</p>
+
+  <h3>1. The coefficient table: <code>coeftest</code></h3>
+<pre><code>&gt; coeftest(fit, vcov = vcovHC(fit, type = "HC1"))
+
+t test of coefficients:
+
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept) -512.733   3379.864 -0.1517   0.8794
+height       707.672     50.395 14.0425   &lt;2e-16</code></pre>
+  <p>Each row is one coefficient. Read across a row from left to right:</p>
+  <div class="tw"><table>
+  <tr><th>Column</th><th>What it is</th><th>Height row</th><th>How to say it</th></tr>
+  <tr><td><b>row name</b></td><td>Which coefficient. <code>(Intercept)</code> is β̂₀; every other row is the slope on that variable.</td><td>height → β̂₁</td><td>—</td></tr>
+  <tr><td><b>Estimate</b></td><td>The OLS coefficient β̂, in units of Y per unit of X</td><td>707.672</td><td>"Workers who are one inch taller earn $708 more per year on average."</td></tr>
+  <tr><td><b>Std. Error</b></td><td>SE(β̂): how much β̂ would typically move from sample to sample. Robust here because of <code>vcovHC</code>.</td><td>50.395</td><td>"The estimate is precise to about ±$50 per inch."</td></tr>
+  <tr><td><b>t value</b></td><td>Estimate ÷ Std. Error. Tests <b>H₀: β = 0 only</b>.</td><td>707.672 / 50.395 = 14.04</td><td>"The slope is 14 standard errors from zero."</td></tr>
+  <tr><td><b>Pr(&gt;|t|)</b></td><td>Two-sided p-value for H₀: β = 0, i.e. 2Φ(−|t|)</td><td>&lt;2e-16</td><td>"If height had no relationship with earnings, a slope this far from 0 would essentially never happen."</td></tr>
+  </table></div>
+  <ul>
+    <li><b>The intercept row:</b> −512.73 is predicted earnings at height 0 inches, far outside the data, so it has no meaning on its own. Its t = −0.15 and p = 0.88 just say the line's height at X = 0 isn't distinguishable from zero. Nobody cares; don't interpret it.</li>
+    <li><b>Reading <code>&lt;2e-16</code>:</b> R's scientific notation. <code>2e-16</code> = 2 × 10⁻¹⁶ = 0.0000000000000002. "Less than" that is R's way of saying "basically zero." Likewise <code>8.616e-05</code> = 0.00008616 and <code>1.4086e+11</code> = 140,860,000,000.</li>
+    <li><b>Decision rule:</b> reject H₀: β = 0 at 5% if |t| &gt; 1.96, equivalently p &lt; 0.05. Here 14.04 &gt; 1.96: reject.</li>
+  </ul>
+  <div class="tip"><p>The t and p columns <b>only</b> test β = 0. For any other value, compute it yourself: H₀: β₁ = 1,000 gives t = (707.672 − 1,000)/50.395 = −5.80, so reject. A shortcut: check whether 1,000 is inside the confidence interval.</p></div>
+
+  <h3>2. Confidence intervals: <code>coefci</code></h3>
+<pre><code>&gt; coefci(fit, vcov. = vcovHC(fit, type = "HC1"))
+                2.5 %    97.5 %
+(Intercept) -7137.593 6112.1266
+height        608.892  806.4507</code></pre>
+  <ul>
+    <li>The two columns are the lower and upper ends of the 95% CI (2.5% cut off each tail). By hand: 707.672 ± 1.96 × 50.395 = [608.9, 806.4].</li>
+    <li>In words: "We are 95% confident the population slope is between $609 and $806 per inch." The interval is about β₁ (the population), not about individual workers.</li>
+    <li>0 is not inside, which is the same fact as p &lt; 0.05.</li>
+  </ul>
+
+  <h3>3. The full summary: <code>summary(fit)</code></h3>
+<pre><code>&gt; summary(fit)
+
+Call:
+lm(formula = earnings ~ height, data = eh)
+
+Residuals:
+   Min     1Q Median     3Q    Max
+-47836 -21879  -7976  34323  50599
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)  -512.73    3386.86  -0.151     0.88
+height        707.67      50.49  14.016   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 26780 on 17868 degrees of freedom
+Multiple R-squared:  0.01088,	Adjusted R-squared:  0.01082
+F-statistic: 196.5 on 1 and 17868 DF,  p-value: &lt; 2.2e-16</code></pre>
+  <div class="tw"><table>
+  <tr><th>Line</th><th>What it means</th></tr>
+  <tr><td><b>Call</b></td><td>The regression you ran: Y on the left of <code>~</code>, regressors on the right.</td></tr>
+  <tr><td><b>Residuals</b></td><td>The spread of the misses û = Y − Ŷ: smallest, 25th percentile, median, 75th percentile, largest. A median far from 0 (here −7,976) means the misses are skewed: a few people far above the line, many a bit below. Common with earnings, and a hint that logs might fit better.</td></tr>
+  <tr><td><b>Coefficients</b></td><td>Same estimates as <code>coeftest</code>, but the <b>Std. Error is not robust</b> (50.49 here vs. 50.395 robust). So t and p differ slightly too. <b>Don't report these SEs</b> in this course; use <code>coeftest</code>.</td></tr>
+  <tr><td><b>Signif. codes</b></td><td>R's stars: *** p &lt; 0.001, ** p &lt; 0.01, * p &lt; 0.05, . p &lt; 0.1. These are <b>not</b> the economics convention you'll see in papers (*** 1%, ** 5%, * 10%). Always read the actual p-value.</td></tr>
+  <tr><td><b>Residual standard error: 26780</b></td><td>The <b>SER</b> (Stata's "Root MSE"): the typical size of a miss, in units of Y. "Predictions of a worker's earnings from height are typically off by about $26,800." Compare it with the SD of Y ($26,923): knowing height barely helps predict an individual's earnings.</td></tr>
+  <tr><td><b>on 17868 degrees of freedom</b></td><td>n − k − 1 = 17,870 − 1 − 1. The n − 2 in the SER formula.</td></tr>
+  <tr><td><b>Multiple R-squared: 0.01088</b></td><td>R²: height accounts for about 1.1% of the variation in earnings across workers. Small, but that does not make the slope unimportant or imprecise.</td></tr>
+  <tr><td><b>Adjusted R-squared: 0.01082</b></td><td>R² with a penalty for each regressor. Always a bit lower. Matters when comparing models with different numbers of regressors.</td></tr>
+  <tr><td><b>F-statistic: 196.5 on 1 and 17868 DF</b></td><td>Tests H₀: <b>all slopes = 0</b> at once. With one regressor F = t² (14.016² ≈ 196.5, non-robust). With several regressors it's the joint test from Lecture 12.</td></tr>
+  </table></div>
+
+  <h3>4. Multiple regression output</h3>
+  <p>Add a dummy <code>male</code> (1 for men) to the height regression. This is PS2 Problem 6.7 run for real.</p>
+<pre><code>&gt; fit2 &lt;- lm(earnings ~ height + male, data = eh)
+&gt; coeftest(fit2, vcov = vcovHC(fit2, type = "HC1"))
+
+t test of coefficients:
+
+             Estimate Std. Error t value  Pr(&gt;|t|)
+(Intercept) -12400.77    4508.54 -2.7505  0.005956
+height         899.66      69.79 12.8902 &lt; 2.2e-16
+male         -2191.54     558.11 -3.9267 8.616e-05</code></pre>
+  <ul>
+    <li><b>height 899.66:</b> comparing workers of the <b>same sex</b>, one more inch of height goes with $900 more earnings on average.</li>
+    <li><b>male −2,191.54:</b> comparing workers of the <b>same height</b>, men earn $2,192 less than women on average in this sample (t = −3.93, p = 0.00009).</li>
+    <li><b>Intercept:</b> predicted earnings for a woman (male = 0) who is 0 inches tall. Meaningless.</li>
+  </ul>
+  <div class="callout"><p><b>An omitted variable bias lesson hidden in this output.</b> Leaving sex out gave a slope of $708; including it gives $900. So omitting sex biased the slope <b>down</b>, not up. Why? Men are taller (cov(height, male) &gt; 0), but <i>holding height fixed</i>, men earn less here (β₂ &lt; 0). Bias = β₂ × cov/var = (−) × (+) = <b>negative</b>. Men do earn more on average ($48,460 vs. $45,621), but all of that gap and more runs through their height. The sign of β₂ comes from the <i>long</i> regression, holding X fixed, not from the raw gap. The two-sign rule from Lecture 10 is exactly how you read this.</p></div>
+
+  <h3>5. Sums of squares: <code>anova</code></h3>
+<pre><code>&gt; anova(fit)
+Analysis of Variance Table
+
+Response: earnings
+             Df     Sum Sq    Mean Sq F value    Pr(&gt;F)
+height        1 1.4086e+11 1.4086e+11  196.46 &lt; 2.2e-16 ***
+Residuals 17868 1.2812e+13 7.1702e+08</code></pre>
+  <ul>
+    <li>The <b>height</b> row's Sum Sq is the <b>ESS</b>; the <b>Residuals</b> row's Sum Sq is the <b>SSR</b>. TSS = ESS + SSR.</li>
+    <li>R² = ESS / TSS = 1.4086e11 / (1.4086e11 + 1.2812e13) = 0.0109 ✓.</li>
+    <li>The Residuals Mean Sq is SSR/(n − 2) = 7.17e8; its square root, 26,777, is the SER ✓.</li>
+  </ul>
+
+  <h3>6. Things R does that trip people up</h3>
+  <ul>
+    <li><b>NA coefficients:</b> "Coefficients: (1 not defined because of singularities)" with a row of NA means <b>perfect multicollinearity</b> (e.g. both <code>male</code> and <code>female</code> with an intercept). R drops one for you. Stata says "omitted because of collinearity."</li>
+    <li><b>Dropped observations:</b> "(168 observations deleted due to missingness)" in <code>summary</code> means rows with missing values were left out, so n changed. That's why the college slope was 77.78 on 820 colleges but 75.62 on 988.</li>
+    <li><b>Logs:</b> <code>log()</code> in R is the natural log (Stata's <code>ln()</code>). <code>log(0)</code> is <code>-Inf</code> and <code>lm()</code> stops with an error.</li>
+    <li><b>Factor variables:</b> a text variable like <code>season</code> becomes a set of dummies automatically. R leaves out the first level (alphabetical) as the reference category, so every coefficient is relative to it.</li>
+    <li><b>Rescaling:</b> if Y is in $1,000s, every coefficient, SE and the SER shrink by 1,000; t, p and R² don't change.</li>
+  </ul>
+
+  <h3>Stata ↔ R: same numbers, different names</h3>
+  <div class="tw"><table>
+  <tr><th>Quantity</th><th>Stata (<code>regress y x, robust</code>)</th><th>R</th></tr>
+  <tr><td>Coefficient</td><td>Coefficient</td><td>Estimate</td></tr>
+  <tr><td>Robust SE</td><td>Robust std. err.</td><td>Std. Error (from <code>coeftest</code> with <code>vcovHC</code>)</td></tr>
+  <tr><td>t</td><td>t</td><td>t value</td></tr>
+  <tr><td>p-value</td><td>P&gt;|t|</td><td>Pr(&gt;|t|)</td></tr>
+  <tr><td>95% CI</td><td>[95% conf. interval]</td><td><code>coefci</code>: 2.5 % / 97.5 %</td></tr>
+  <tr><td>Intercept</td><td>_cons</td><td>(Intercept)</td></tr>
+  <tr><td>SER</td><td>Root MSE</td><td>Residual standard error / <code>$sigma</code></td></tr>
+  <tr><td>R², adjusted R²</td><td>R-squared, Adj R-squared</td><td>Multiple R-squared, Adjusted R-squared</td></tr>
+  <tr><td>ESS, SSR</td><td>Model SS, Residual SS (without <code>robust</code>)</td><td><code>anova</code>: regressor rows, Residuals row</td></tr>
+  <tr><td>Fitted values, residuals</td><td><code>predict yhat</code>, <code>predict uhat, residuals</code></td><td><code>fitted(fit)</code>, <code>resid(fit)</code></td></tr>
+  </table></div>
+
+  <h3>A five-step routine for any output question</h3>
+  <ol>
+    <li><b>Find Y, X and the units</b> from the formula (<code>y ~ x</code>) or the Stata command. Note any logs.</li>
+    <li><b>Read the slope in words</b> with units: "one more [unit of X] goes with [β̂] more [units of Y] on average", adding "holding [other regressors] fixed" in a multiple regression. With logs, convert to percent.</li>
+    <li><b>Check precision:</b> SE, t, p, CI. Significant at 5% if |t| &gt; 1.96 or 0 is outside the CI. For any other hypothesized value, compute t yourself.</li>
+    <li><b>Check fit only if asked:</b> R² (share explained), SER (typical miss in Y's units).</li>
+    <li><b>Ask whether it's causal:</b> what's in u, does it move with X, which way does it bias the slope?</li>
+  </ol>
+
+  <h3>Practice reading</h3>
+  <details><summary>In the height regression, what does the 50.395 tell you, in words?</summary><div class="body"><div class="ans"><p>If we drew many samples of 17,870 workers, the estimated slope would typically vary by about $50 per inch from sample to sample. It measures the precision of the $708 estimate.</p></div></div></details>
+  <details><summary>Why are the Std. Error values in <code>summary(fit)</code> different from <code>coeftest</code>?</summary><div class="body"><div class="ans"><p><code>summary</code> uses homoskedasticity-only SEs, which assume the spread of earnings around the line is the same at every height. <code>coeftest</code> with <code>vcovHC(type = "HC1")</code> gives robust SEs that don't assume that. Use the robust ones.</p></div></div></details>
+  <details><summary>A row reads <code>educ  0.0812  0.0041  19.8  &lt;2e-16</code> in a regression of <code>log(wage)</code> on <code>educ</code>. Interpret.</summary><div class="body"><div class="ans"><p>Log-linear: one more year of education goes with about 8.1% higher wages on average. SE 0.0041, t = 19.8, p ≈ 0: very precisely estimated. 95% CI ≈ 8.1% ± 0.8%, so about 7.3% to 8.9%. Causal only if nothing in u (ability, family) moves with education.</p></div></div></details>
+  <details><summary>R prints <code>female NA NA NA NA</code>. What happened and what do you do?</summary><div class="body"><div class="ans"><p>Perfect multicollinearity: <code>female</code> = 1 − <code>male</code>, and the two plus the intercept are linearly dependent. Keep one of them; its coefficient is the difference from the left-out group.</p></div></div></details>
+  <details><summary>The Residual standard error is 26,780 and R² is 0.011. A friend says "height doesn't matter for earnings." Respond.</summary><div class="body"><div class="ans"><p>Low R² and a large SER mean height is a poor <i>predictor</i> of any one person's earnings, since many other things matter. But the slope is precisely estimated (t = 14): on average, taller workers earn more. Fit and the size or significance of a slope are different questions.</p></div></div></details>
 </section>
+
 <section class="block" id="story">
   <p class="eyebrow">Read this first</p>
   <h2>The one story the whole course tells</h2>
