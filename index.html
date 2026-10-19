@@ -14,22 +14,15 @@ window.MathJax = { tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]
 <style>
 /* Layout: a sticky chapter rail on the left (like a course reader's contents), one reading column on the right; rail becomes a top strip on phones. */
 :root{
-  --bg:#f6f7f9; --surface:#ffffff; --ink:#18212b; --muted:#56616e; --rule:#d9dee5;
-  --accent:#1d5a86; --accent-soft:#e3edf5; --tip:#8a5a00; --tip-soft:#fbf1dc;
-  --ok:#2c6e49; --ok-soft:#e2f1e7; --code-bg:#eef1f5;
-  --grid:#dbe6f2; --note:#6b3fa0; --fixc:#b3412e; --fix-soft:#fbeeeb;
+  --bg:#12171d; --surface:#19212a; --ink:#e4e9ef; --muted:#9aa6b3; --rule:#2c3743;
+  --accent:#7db4de; --accent-soft:#1e3347; --tip:#e9b45a; --tip-soft:#33291a;
+  --ok:#7fc79b; --ok-soft:#1b3326; --code-bg:#0f141a;
+  --grid:#22303e; --note:#c2a3ea; --fixc:#ec8a75; --fix-soft:#33201c;
   --f-display:"Source Serif 4", Georgia, "Times New Roman", serif;
   --f-body:"Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
-  --bg:#12171d; --surface:#19212a; --ink:#e4e9ef; --muted:#9aa6b3; --rule:#2c3743;
-  --accent:#7db4de; --accent-soft:#1e3347; --tip:#e9b45a; --tip-soft:#33291a;
-  --ok:#7fc79b; --ok-soft:#1b3326; --code-bg:#0f141a; --grid:#22303e; --note:#c2a3ea; --fixc:#ec8a75; --fix-soft:#33201c; color-scheme:dark; } }
-:root[data-theme="dark"]{
-  --bg:#12171d; --surface:#19212a; --ink:#e4e9ef; --muted:#9aa6b3; --rule:#2c3743;
-  --accent:#7db4de; --accent-soft:#1e3347; --tip:#e9b45a; --tip-soft:#33291a;
-  --ok:#7fc79b; --ok-soft:#1b3326; --code-bg:#0f141a; --grid:#22303e; --note:#c2a3ea; --fixc:#ec8a75; --fix-soft:#33201c; color-scheme:dark; }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
@@ -116,6 +109,23 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
   .plan label{grid-template-columns:auto minmax(0,1fr)}
   .plan .d{grid-column:2}
 }
+.journey{display:grid;gap:4px;margin:16px 0;counter-reset:none}
+.stop{position:relative;border-left:2px solid var(--rule);padding:4px 0 14px 22px;margin-left:6px;min-width:0}
+.stop::before{content:"";position:absolute;left:-7px;top:9px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--accent)}
+.stop .sl{margin:0 0 6px;font:650 1.08rem/1.3 var(--f-display);color:var(--accent)}
+.plain{margin:14px 0;max-width:78ch;padding:10px 16px;border-radius:8px;background:var(--surface);border:1px solid var(--rule)}
+.plain .ph{margin:0 0 2px;font-size:.7rem;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--ok)}
+.plain p{margin:4px 0}
+.arrows{display:grid;grid-template-columns:auto auto auto;gap:6px 10px;align-items:center;justify-items:center;max-width:420px;margin:10px 0;padding:12px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;font-size:.85rem;color:var(--muted)}
+.arrows .node{font:700 1.1rem var(--f-mono);color:var(--ink);background:var(--accent-soft);border-radius:6px;padding:4px 12px}
+.arrows .node:first-child{grid-column:2}
+.arrows .edge:nth-child(2){grid-column:1;grid-row:2}
+.arrows .edge:nth-child(3){grid-column:3;grid-row:2}
+.arrows .node:nth-child(4){grid-column:1;grid-row:3}
+.arrows .mid{grid-column:2;grid-row:3;color:var(--accent);font-weight:600}
+.arrows .node:nth-child(6){grid-column:3;grid-row:3}
+.phase{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.ph1{background:var(--accent-soft);color:var(--accent)}.ph2{background:var(--tip-soft);color:var(--tip)}.ph3{background:var(--ok-soft);color:var(--ok)}.ph0{background:var(--fix-soft);color:var(--fixc)}
 </style>
 </head>
 <body>
@@ -127,12 +137,13 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
   <h4>Start here</h4>
   <ul>
     <li><a href="#overview">Exam overview</a></li>
-    <li><a href="#plan">16-day study plan</a></li>
+    <li><a href="#plan">Study schedule</a></li>
     <li><a href="#formulas">Formula sheet</a></li>
     <li><a href="#output">Reading Stata/R output</a></li>
   </ul>
   <h4>Lecture notes</h4>
   <ul>
+    <li><a href="#story"><span class="n">★</span>The one story</a></li>
     <li><a href="#l1"><span class="n">L1</span>Introduction</a></li>
     <li><a href="#l2"><span class="n">L2</span>Probability I</a></li>
     <li><a href="#l3"><span class="n">L3</span>Probability II</a></li>
@@ -142,7 +153,9 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
     <li><a href="#l7"><span class="n">L7</span>Regression II</a></li>
     <li><a href="#l8"><span class="n">L8</span>Fit and logs</a></li>
     <li><a href="#l9"><span class="n">L9</span>Properties of OLS</a></li>
-    <li><a href="#ahead"><span class="n">L10+</span>Still to come</a></li>
+    <li><a href="#l10"><span class="n">L10</span>Omitted variable bias</a></li>
+    <li><a href="#l11"><span class="n">L11</span>Multiple regression</a></li>
+    <li><a href="#ahead"><span class="n">L12+</span>Still to come</a></li>
   </ul>
   <h4>Answers</h4>
   <ul>
@@ -178,28 +191,21 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
     <li><b>What the course rewards:</b> reading regression output, interpreting coefficients in words with units, computing t-stats, p-values and CIs by hand, and deciding whether a comparison is causal (selection bias, \(E[u_i\mid X_i]=0\)).</li>
     <li><b>Bring the critical values in your head:</b> 1.645 (10%), 1.96 (5%), 2.576 (1%). Know \(\Phi(1.96)=0.975\), \(\Phi(1.645)=0.95\), \(\Phi(1)=0.841\), \(\Phi(2)=0.977\).</li>
   </ul>
-  <div class="callout"><p><b>Coverage gap.</b> The midterm covers Stock &amp; Watson through chapter 9 (multiple regression, nonlinear models, assessing studies). Your slides so far stop at Lecture 9 (properties of OLS). The <a href="#ahead">"Still to come"</a> section previews those topics from the textbook so you are not starting cold; update it against Lectures 10–13 as they happen.</p></div>
+  <div class="callout"><p><b>Concepts over math.</b> The exam leans on understanding, not computation. Start with <a href="#story">"The one story"</a>, which connects every lecture, then use the "In plain words" boxes and concept checks. Notes now cover Lectures 1–11; <a href="#ahead">"Still to come"</a> previews what follows from the textbook.</p></div>
 </section>
 
 <section class="block" id="plan">
-  <h2>16-day study plan</h2>
-  <p class="lede">One focused block a day. Tick items off; your checks are saved in this browser only.</p>
+  <h2>Study schedule: Wed Oct 21 → exam Wed Oct 28</h2>
+  <p class="lede">Three phases, in order: <span class="phase ph1">Notes</span> rewrite the lectures in your own words, <span class="phase ph2">Practice sets</span> redo worksheets and problem sets, <span class="phase ph3">Test</span> practice questions and a timed exam. Tick items off; checks are saved in this browser.</p>
   <div class="plan" id="planlist">
-    <label><input type="checkbox" id="p1"><span class="d">Tue Oct 13</span><span>Probability review (L2–L3). Redo the TikTok joint-distribution worksheet without looking. PS1 Problems 1–4.</span></label>
-    <label><input type="checkbox" id="p2"><span class="d">Wed Oct 14</span><span>Finish and submit PS2 by 11:59 pm. Cite any AI help, as the syllabus requires.</span></label>
-    <label><input type="checkbox" id="p3"><span class="d">Thu Oct 15</span><span>Inference (L4): the six steps, p-values, CIs. Inference worksheet Problems 1–4, PS1 Problem 5.</span></label>
-    <label><input type="checkbox" id="p4"><span class="d">Fri Oct 16</span><span>Potential outcomes and selection bias (L5). Regression worksheet Problems 1–3. Practise signing the bias.</span></label>
-    <label><input type="checkbox" id="p5"><span class="d">Sat Oct 17</span><span>Regression on a dummy, first stage, spillovers (L6). PS2 Problems 1–3.</span></label>
-    <label><input type="checkbox" id="p6"><span class="d">Sun Oct 18</span><span>Light day: write the formula sheet from memory, then check it.</span></label>
-    <label><input type="checkbox" id="p7"><span class="d">Mon Oct 19</span><span>OLS (L7): derive \(\hat\beta_0,\hat\beta_1\); do the 3-college example by hand. Regression worksheet Problems 4–6.</span></label>
-    <label><input type="checkbox" id="p8"><span class="d">Tue Oct 20</span><span>Fit and logs (L8): TSS = ESS + SSR, R², SER, the three log models. PS2 Problems 6 and 8.</span></label>
-    <label><input type="checkbox" id="p9"><span class="d">Wed Oct 21</span><span>Properties of OLS (L9): unbiasedness proof, consistency, robust SEs. PS2 Problems 4, 5, 7.</span></label>
-    <label><input type="checkbox" id="p10"><span class="d">Thu Oct 22</span><span>New lecture material: omitted variable bias and multiple regression. Rewrite the notes for it in your own words.</span></label>
-    <label><input type="checkbox" id="p11"><span class="d">Fri Oct 23</span><span>Practice exam below, timed at 75 minutes, closed notes.</span></label>
-    <label><input type="checkbox" id="p12"><span class="d">Sat Oct 24</span><span>Grade the practice exam. Redo every miss. True/False drill.</span></label>
-    <label><input type="checkbox" id="p13"><span class="d">Sun Oct 25</span><span>Nonlinear models and internal/external validity (S&amp;W ch. 8–9). List the five threats to internal validity from memory.</span></label>
-    <label><input type="checkbox" id="p14"><span class="d">Mon Oct 26</span><span>Review lecture. Bring your list of shaky topics.</span></label>
-    <label><input type="checkbox" id="p15"><span class="d">Tue Oct 27</span><span>Formula sheet once more, read every "Exam tip" box on this page, sleep.</span></label>
+    <label><input type="checkbox" id="s1"><span class="d">Wed Oct 21</span><span><span class="phase ph1">Notes</span> Lectures 1–4 (causality vs. association, probability, inference). Read each section here, then write your own one-page summary without looking. Do the concept checks. Go to lecture.</span></label>
+    <label><input type="checkbox" id="s2"><span class="d">Thu Oct 22</span><span><span class="phase ph1">Notes</span> Lectures 5–8 (potential outcomes, selection bias, regression on a dummy, OLS, R² and logs). Fix the spots flagged in "Fix in your notes."</span></label>
+    <label><input type="checkbox" id="s3"><span class="d">Fri Oct 23</span><span><span class="phase ph1">Notes</span> Lectures 9–11 plus Wednesday's lecture (properties of OLS, omitted variable bias, multiple regression). Then read "The one story" at the top and explain it out loud in five minutes.</span></label>
+    <label><input type="checkbox" id="s4"><span class="d">Sat Oct 24</span><span><span class="phase ph2">Practice sets</span> Worksheets 2, 3, 4 and 7 and the recitation problems, without peeking. Check against the worksheet solutions; redo anything you missed.</span></label>
+    <label><input type="checkbox" id="s5"><span class="d">Sun Oct 25</span><span><span class="phase ph2">Practice sets</span> Redo PS1 and PS2 from a blank page. Use the problem-set guide to check you picked the right concept and formula for each question. List your three weakest topics.</span></label>
+    <label><input type="checkbox" id="s6"><span class="d">Mon Oct 26</span><span><span class="phase ph3">Test</span> Review lecture (bring your weak-topic list). Evening: all concept checks and the True/False drill; for each miss, reread that lecture section.</span></label>
+    <label><input type="checkbox" id="s7"><span class="d">Tue Oct 27</span><span><span class="phase ph3">Test</span> Practice midterm, timed at 75 minutes, closed notes. Grade it, redo every miss, reread the formula sheet. Stop early and sleep.</span></label>
+    <label><input type="checkbox" id="s8"><span class="d">Wed Oct 28</span><span><span class="phase ph0">Exam</span> 2:40–3:55 pm. Morning: skim "The one story" and the formula sheet only.</span></label>
   </div>
 </section>
 
@@ -282,6 +288,25 @@ summary(fit)$r.squared ; summary(fit)$sigma        # R² and SER</code></pre>
   <div class="tip"><p>The t and p columns always test \(H_0:\beta=0\). To test any other value (say \(\beta_1=80\)) compute \(t=(75.62-80)/2.936=-1.49\) yourself. Equivalent shortcut: is 80 inside the CI? It is (69.9 to 81.4), so you fail to reject.</p></div>
   <div class="tip"><p>Units carry through. If Y is rescaled by \(c\), the slope, intercept, SEs and SER all scale by \(c\); t, p and R² do not change. If X is rescaled by \(c\), the slope and its SE divide by \(c\).</p></div>
 </section>
+<section class="block" id="story">
+  <p class="eyebrow">Read this first</p>
+  <h2>The one story the whole course tells</h2>
+  <p class="lede">The midterm tests concepts more than math. Every lecture so far answers one question: <b>when does a comparison in data tell us what causes what?</b> Here is the path, one step at a time.</p>
+  <div class="journey">
+    <div class="stop"><p class="sl">L1 · The question</p><p>Data shows things moving together (association). Policy needs to know what happens if we <i>change</i> something (causation). These are different, and confusing them leads to bad policy, like handing out Mozart CDs.</p></div>
+    <div class="stop"><p class="sl">L2–L3 · The language of uncertainty</p><p>We describe the world with random variables. The expected value is the long-run average, the variance is the spread, and covariance says whether two things move together. Our estimators are random too: a different sample gives a different number.</p></div>
+    <div class="stop"><p class="sl">L4 · Separating signal from noise</p><p>Because estimates bounce around from sample to sample, we ask: is this result bigger than chance would produce? The standard error measures the bounce, and the t-statistic and p-value measure how surprising our result would be if nothing were going on. This deals with <b>noise</b>, not with bias.</p></div>
+    <div class="stop"><p class="sl">L5 · What "causal" means</p><p>A causal effect compares the same person in two worlds, only one of which we ever see. Comparing two different groups gives the effect plus <b>selection bias</b>: the groups were different to begin with. A lottery removes selection bias.</p></div>
+    <div class="stop"><p class="sl">L6–L7 · Regression is a comparison of averages</p><p>Comparing two group means is a regression on a dummy. With a variable taking many values, least squares draws the line that best summarizes how the average of Y changes with X. Everything else that affects Y sits in the error term u.</p></div>
+    <div class="stop"><p class="sl">L8 · How well does the line fit?</p><p>R² and the SER describe fit. Fit is a different question from causation: a regression can fit badly and still give a clean causal effect (Oregon), or fit well and be badly biased.</p></div>
+    <div class="stop"><p class="sl">L9 · When can we trust the slope?</p><p>The slope is right on average and gets closer with more data only if the error term has nothing systematic to do with X: \(E[u\mid X]=0\). More data shrinks noise but never fixes bias.</p></div>
+    <div class="stop"><p class="sl">L10 · What goes wrong: omitted variables</p><p>If something left in u affects Y <i>and</i> moves with X, the slope picks up its effect. That is omitted variable bias, and you can predict its direction from two signs.</p></div>
+    <div class="stop"><p class="sl">L11 · The fix we can try: multiple regression</p><p>Put the omitted variable into the regression and compare observations that share its value. This removes bias from the variables we include, never from the ones we leave out.</p></div>
+  </div>
+  <div class="tip"><p>Almost any concept question can be answered by asking three things in order: (1) What is being compared? (2) What else differs between the groups being compared (what is in u)? (3) Does that make the estimate too big or too small?</p></div>
+</section>
+
+
 <section class="block" id="l1">
   <p class="eyebrow">Lecture 1 · Wed Sep 9</p>
   <h2>Introduction: what econometrics is for</h2>
@@ -691,35 +716,234 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
 <div class="mine"><p class="mh">From your notes</p><ul><li><b>Important formula</b> (you boxed it): β̂₁ = β₁ + Σ(X<sub>i</sub> − X̄)u<sub>i</sub> / Σ(X<sub>i</sub> − X̄)². Everything about bias and consistency comes from the second term.</li><li>Property 1, unbiased if E[u | X] = 0; property 2, consistent if E[u | X] = 0; that condition is the assumption of causality.</li><li>Heteroskedastic errors → report robust SEs.</li></ul></div><div class="fix"><p class="mh">Fix in your notes</p><ul><li>You wrote β̂₁ →<sup>p</sup> β₁ + S.cov(X,Y)/S.var(X,Y). Two separate statements got merged: β̂₁ = S.cov(X,Y)/S.var(X) →<sup>p</sup> cov(X,Y)/var(X) = β₁ + <b>cov(X, u)</b>/var(X).</li><li>"Consistent must have cov(X,Y)/var(X) = 0": no, that would mean β₁ = 0. The condition is <b>cov(X, u) = 0</b>.</li><li>"…as E(u) = 0": E(u) = 0 is free (the intercept absorbs any mean). What you need is <b>E[u | X] = 0</b>, which implies cov(X, u) = 0.</li><li>"In order to be unbiased we need this [the error term] to be 0": it won't be 0 in any one sample. We need its <b>expected value</b> to be 0, which E[u | X] = 0 guarantees.</li></ul></div><h3>Concept checks</h3><details><summary>Omitted ability raises earnings and is positively correlated with schooling. With a huge sample, is β̂₁ on schooling above, below, or equal to β₁?</summary><div class="body"><div class="ans"><p>Above: cov(X, u) &gt; 0, and more data does not remove bias.</p></div></div></details><details><summary>What three things make SE(β̂₁) smaller?</summary><div class="body"><div class="ans"><p>Larger n, smaller error spread (SER), and more spread in X.</p></div></div></details><details><summary>The spread of earnings around the line grows with SAT. What is this called, and what do you do?</summary><div class="body"><div class="ans"><p>Heteroskedasticity. Use heteroskedasticity-robust standard errors (Stata <code>, robust</code>; R <code>vcovHC(fit, type = "HC1")</code>).</p></div></div></details><details><summary>β̂₁ = 2.4, SE = 1.5. Is the effect significant at 10%? 95% CI?</summary><div class="body"><div class="ans"><p>t = 1.6 &lt; 1.645, not significant at 10%. CI: 2.4 ± 2.94 = [−0.54, 5.34].</p></div></div></details>
 </section>
 
+<section class="block" id="l10">
+  <p class="eyebrow">Lecture 10 · Wed Oct 14</p>
+  <h2>Omitted variable bias</h2>
+  <p class="lede">The question: when does a regression slope mislead, in which direction, and by how much? Reading: S&amp;W 6.1–6.2; Mastering 'Metrics ch. 2.</p>
+
+  <div class="journey">
+  <div class="stop"><p class="sl">Stop 1 · A number that looks like an answer</p>
+    <p>We left Lecture 9 with the college line: colleges whose admitted students score 100 points higher on the SAT have median earnings about <b>$7,560 higher</b>. It's tempting to read that as "going to a more selective college pays $7,560 a year." Lecture 10 asks whether we're allowed to.</p>
+    <p>The answer depends entirely on what's hiding in \(u_i\), the error term: <i>everything else that affects earnings</i>. If anything in there is systematically higher at high-SAT colleges, the slope is doing double duty. It measures SAT's effect <i>plus</i> that other thing's effect.</p>
+    <details><summary>Slide question: You chose Columbia (SAT 1553). Would you earn $7,560 less at a college averaging 1453? List three things in u and say whether each is higher at high-SAT colleges.</summary><div class="body"><div class="ans">
+      <p>Not necessarily. The $7,560 compares <i>different colleges with different students</i>, not you at two colleges. Things in u:</p>
+      <p>• <b>Parents' income and connections</b>: higher at high-SAT colleges (raises earnings).<br>• <b>Mix of majors</b> (engineering, CS, finance): higher at high-SAT colleges.<br>• <b>Location</b> in high-wage cities like New York: likely higher.<br>• <b>Students' own ambition and skills beyond the SAT</b>: likely higher.</p>
+      <p>All of these raise earnings and rise with SAT, so the $7,560 likely <b>overstates</b> what the college itself does for you.</p></div></div></details>
+    <div class="plain"><p class="ph">In plain words</p><p>Unbiased needs \(E[u\mid X]=0\): the average of "everything else" is the same at every SAT level. If parents' income is in u and rises with SAT, then \(\mathrm{cov}(SAT,u)&gt;0\) and the slope settles on a number <b>above</b> the true effect, no matter how many colleges we add.</p></div>
+    <p><b>Evidence that this is real</b> (Chetty, Deming &amp; Friedman 2026): among students with the <i>same</i> SAT/ACT score, children from the top 1% attend Ivy Plus colleges at about twice the rate of middle-class children. So parents' income is in u <i>and</i> moves with selectivity.</p>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 2 · Selection bias and \(E[u\mid X]=0\) are the same idea</p>
+    <p>In Lecture 5 we worried about <b>selection bias</b>. In Lecture 9 we worried about \(E[u\mid X]=0\). These are one idea in two languages.</p>
+    <p>Write the potential-outcomes model as a regression: with the same effect for everyone, \(Y_i=\underbrace{E[Y_{0i}]}_{\beta_0}+\beta_1D_i+\underbrace{Y_{0i}-E[Y_{0i}]}_{u_i}\). So the error term is <b>how person i would do without treatment, compared with the average person</b>.</p>
+    <p>Then "\(E[u\mid D=1]=E[u\mid D=0]=0\)" says exactly "\(E[Y_{0}\mid D=1]=E[Y_{0}\mid D=0]\)": the treated and untreated would have done equally well without the treatment. <b>No selection bias.</b> If it fails, \(\hat\beta_1=\bar Y_1-\bar Y_0\) estimates \(\beta_1\) + selection bias.</p>
+    <div class="tw"><table><tr><th></th><th>Potential outcomes (L5)</th><th>Regression (L6–L9)</th></tr>
+    <tr><td>Causal effect</td><td>\(Y_{1i}-Y_{0i}\)</td><td>\(\beta_1\)</td></tr>
+    <tr><td>Estimator</td><td>\(\bar Y_1-\bar Y_0\)</td><td>\(\hat\beta_1\)</td></tr>
+    <tr><td>Key assumption</td><td>no selection bias</td><td>\(E[u_i\mid X_i]=0\)</td></tr></table></div>
+    <h4>Slide practice: where is the selection bias?</h4>
+    <details><summary>(a) Health of people with and without health insurance, in a national survey.</summary><div class="body"><div class="ans"><p>u holds education, income, employment, age, health habits. The insured are more educated and more often employed (higher u, positive bias), but also older (lower u). Probably positive on net, so the raw gap overstates; but it's an argument, not a fact. (In Oregon, splitting by insurance even flipped the sign because sicker people sought coverage.)</p></div></div></details>
+    <details><summary>(b) Health of winners and losers of Oregon's Medicaid lottery.</summary><div class="body"><div class="ans"><p>No selection bias. The lottery decided who won, so u (age, income, habits) has the same average among winners and losers. The balance table confirms it.</p></div></div></details>
+    <details><summary>(c) Earnings of workers who signed up for job training, and of those who did not.</summary><div class="body"><div class="ans"><p>u holds motivation, skills, recent job loss. Ambiguous sign: motivated people sign up (higher u, overstated), but so do people who just lost their jobs or have weak prospects (lower u, understated). You must argue which dominates; no lottery settles it.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 3 · The two arrows</p>
+    <div class="arrows" role="img" aria-label="Causal diagram: W points to X and to Y; X points to Y">
+      <span class="node">W</span><span class="edge">↙ (2) moves with X</span><span class="edge">(1) affects Y ↘</span>
+      <span class="node">X</span><span class="edge mid">— β₁ →</span><span class="node">Y</span>
+    </div>
+    <p>We regress Y on X hoping to measure one arrow, X → Y. Leaving out a variable W causes bias <b>only if both</b> of these are true:</p>
+    <ol><li><b>W affects Y</b>, so it sits in u.</li><li><b>W moves with X</b> (correlated with X).</li></ol>
+    <p>With both arrows, high-X observations also have more W, so \(\hat\beta_1\) picks up W's effect too. Remove either arrow and there is no bias. If W affects Y but is unrelated to X, it just adds noise.</p>
+    <h4>Slide practice: X = SAT, Y = earnings. Does leaving out each W bias \(\hat\beta_1\)?</h4>
+    <details><summary>(a) Parents' income</summary><div class="body"><div class="ans"><p><b>Yes.</b> Both arrows: it raises earnings (connections, resources) and it rises with SAT (richer families, higher scores). Upward bias.</p></div></div></details>
+    <details><summary>(b) Share of engineering majors</summary><div class="body"><div class="ans"><p><b>Yes.</b> Engineering pays more, and selective, high-SAT colleges tend to have more STEM majors. Upward bias.</p></div></div></details>
+    <details><summary>(c) The weather on graduation day</summary><div class="body"><div class="ans"><p><b>No.</b> Neither arrow: rain at graduation doesn't change earnings ten years later, and it has nothing to do with SAT.</p></div></div></details>
+    <details><summary>(d) A recession when all cohorts graduated</summary><div class="body"><div class="ans"><p><b>No.</b> It affects earnings, but it hits every college at once, so it doesn't vary with SAT (arrow 2 missing). It lowers everyone's earnings, which moves the intercept, not the slope.</p></div></div></details>
+    <details><summary>(e) The college's admission rate</summary><div class="body"><div class="ans"><p><b>Probably yes.</b> Arrow 2 is clearly there: low admission rates go with high SATs. Arrow 1 is the debatable one: does selectivity itself (prestige, the signal to employers, alumni networks) raise earnings beyond SAT? In Lecture 11 adding it moved the SAT slope from 59.9 to 53.0 with a coefficient of −6,194, so the data say it matters.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 4 · How big, and which way</p>
+    <p>If the true ("long") model is \(Y=\beta_0+\beta_1X+\beta_2W+v\) but we run the "short" regression of Y on X alone:</p>
+    \[\hat\beta_1^{short}\xrightarrow{p}\beta_1+\underbrace{\beta_2}_{\text{W's effect on Y}}\cdot\underbrace{\frac{\mathrm{cov}(X,W)}{\mathrm{var}(X)}}_{\text{how much W rises with X}}\]
+    <div class="plain"><p class="ph">In plain words</p><p>Bias = (how much W matters for Y) × (how much extra W comes along with each unit of X). The sign of the bias is the product of the two signs. Positive bias means we <b>overestimate</b>; negative means we <b>underestimate</b>. A big enough bias can even <b>flip the sign</b> of the slope.</p></div>
+    <div class="tw"><table><tr><th></th><th>cov(X, W) &gt; 0</th><th>cov(X, W) &lt; 0</th><th>cov(X, W) = 0</th></tr>
+    <tr><th>β₂ &gt; 0</th><td>upward</td><td>downward</td><td>none</td></tr>
+    <tr><th>β₂ &lt; 0</th><td>downward</td><td>upward</td><td>none</td></tr>
+    <tr><th>β₂ = 0</th><td>none</td><td>none</td><td>none</td></tr></table></div>
+    <details><summary>Slide practice: the return to college. Y = log wages, X = years of school, W = ability. Short slope 0.10; β₂ = 0.05 per SD of ability; ability per extra year of school = 0.4 SD. (1) Which way is the bias? (2) What would the long regression give? (3) Interpret both.</summary><div class="body"><div class="ans">
+      <p>(1) <b>Upward</b>: ability raises wages (β₂ &gt; 0) and more-schooled people have more ability (cov &gt; 0).</p>
+      <p>(2) Bias = 0.05 × 0.4 = 0.02, so long slope = 0.10 − 0.02 = <b>0.08</b>.</p>
+      <p>(3) Short: people with one more year of school earn about 10% more, partly because they also tend to have more ability. Long: comparing people with the <i>same</i> ability, one more year of school goes with about 8% higher wages. Two of the ten points were ability.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 5 · Spot the omitted variable in the news</p>
+    <p>For each headline: what are Y and X, what W is omitted, the sign of β₂, the sign of cov(X, W), and is the claim over- or understated?</p>
+    <details><summary>"Coffee drinkers live longer" (ABC, NPR, NY Post)</summary><div class="body"><div class="ans">
+      <p>Y = lifespan, X = coffee. W = <b>baseline health</b>: β₂ &gt; 0 (healthier people live longer) and cov &gt; 0 (people who get sick are often told to cut coffee) ⇒ upward bias, <b>overstated</b>.</p>
+      <p>A second W pulls the other way: <b>smoking</b>. β₂ &lt; 0, and smokers drink more coffee (cov &gt; 0) ⇒ downward bias. The net sign is a judgment you have to argue.</p></div></div></details>
+    <details><summary>"Dog owners are happier" (WSJ, NY Post)</summary><div class="body"><div class="ans"><p>Y = happiness, X = owning a dog. W = <b>stable life</b> (a house, a yard, steady income, time): β₂ &gt; 0, cov &gt; 0 ⇒ upward bias, <b>overstated</b>. Also reverse causality: happier, more settled people are the ones who get dogs.</p></div></div></details>
+    <details><summary>"Gaming could make teens perform better in school" (NBC, USA Today)</summary><div class="body"><div class="ans"><p>Y = school or cognitive performance, X = hours of gaming. W = <b>family resources</b> (consoles cost money; richer families also invest in school): β₂ &gt; 0, cov &gt; 0 ⇒ <b>overstated</b>. Or W = baseline cognitive skill: kids who are already quick may enjoy games more, which is also upward bias.</p></div></div></details>
+    <details><summary>"Patients at top-ranked hospitals are more likely to die" (made up)</summary><div class="body"><div class="ans"><p>Y = death, X = top-ranked hospital. W = <b>severity of illness</b>: β₂ &gt; 0 (sicker patients die more) and cov &gt; 0 (the sickest are referred to top hospitals) ⇒ upward bias in deaths. The data make top hospitals look deadlier; holding severity fixed they may well save lives. The bias can flip the sign.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 6 · Watching the bias shrink in real data</p>
+    <p>Back to the colleges, now the 820 that have parents' income data (Chetty and coauthors).</p>
+    <details><summary>Slide question: colleges colored by parents' income. Where do you see condition 1 (parents' income affects earnings) and condition 2 (it moves with SAT)?</summary><div class="body"><div class="ans">
+      <p><b>Condition 1:</b> look up and down at a fixed SAT score. The richest-third colleges sit above the poorest-third ones: at the same SAT, richer parents ↔ higher earnings.</p>
+      <p><b>Condition 2:</b> look left to right. The colors sort along the SAT axis: poorest-third colleges cluster at low SAT, richest-third at high SAT.</p></div></div></details>
+    <details><summary>Slide question: predict before you look. Holding parents' income fixed, will the SAT slope rise or fall from $77.8 per point? By how much?</summary><div class="body"><div class="ans"><p>It should <b>fall</b>, because the bias is positive (both arrows positive). Actual answer: it fell to <b>$59.9</b>, about a quarter smaller.</p></div></div></details>
+    <div class="tw"><table><tr><th>Regression</th><th>What it shows</th><th>Key number</th></tr>
+    <tr><td>Short: earnings on SAT</td><td>The biased slope</td><td>77.78 per point</td></tr>
+    <tr><td>Auxiliary: ln(parents' income) on SAT</td><td>How much W rises with X</td><td>0.001662 (100 SAT points ↔ ~17% richer parents)</td></tr>
+    <tr><td>Long: earnings on SAT and ln(parents' income)</td><td>Holding parents' income fixed</td><td>SAT 59.91; lnparinc 10,757 (1% richer ↔ ~$108)</td></tr></table></div>
+    <p><b>The formula works exactly in the sample:</b> short = long + β̂₂ × (slope of W on X): \(77.78=59.91+10{,}757\times0.001662=59.91+17.88\). Parents' income accounted for $17.88 of the $77.78, about 23%.</p>
+    <details><summary>Slide question: is $5,990 per 100 points the causal effect of a more selective college? What is still in u, and which way does it bias the long slope?</summary><div class="body"><div class="ans"><p>No. Still in u: students' ability and motivation beyond the SAT, majors, location, networks, and parts of family background that parents' median income doesn't capture. Most of these rise with SAT and raise earnings, so the long slope is <b>still biased upward</b>. Controls only fix what we include.</p></div></div></details>
+    <details><summary>Slide question: design the study. With a budget and full cooperation from admissions offices, how would you estimate the causal effect of attending a more selective college? Why does nothing in u move with the treatment?</summary><div class="body"><div class="ans">
+      <p>Among applicants a selective college considers qualified, fill some seats by <b>lottery</b>. Compare later earnings of lottery winners and losers (the effect of the offer), then divide by the first stage (the share of winners who actually enroll) to get the effect of attending.</p>
+      <p>Why it works: a coin decides who gets in, so parents' income, ability, motivation and everything else in u has the same average among winners and losers. That makes cov(treatment, u) = 0 for every omitted variable at once, measured or not.</p>
+      <p>A real-world approximation (Dale and Krueger, in Mastering 'Metrics ch. 2): compare students who were <i>admitted to the same set of colleges</i> but chose different ones. They found little earnings gain from the more selective choice for most students.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Bonus · Does going to office hours lower your grade?</p>
+    <p>Made-up data: each extra office-hour visit goes with 1.7 points <i>lower</i> on the final. Should the department cancel office hours?</p>
+    <details><summary>Slide questions: W = midterm score. (1) Sign of cov(visits, midterm)? (2) Sign of β₂? (3) Which way is the short slope biased, and can it flip the sign?</summary><div class="body"><div class="ans">
+      <p>(1) <b>Negative</b>: students who did badly on the midterm go to office hours more. (2) <b>Positive</b>: a higher midterm goes with a higher final, holding visits fixed. (3) Bias = (+) × (−) = <b>downward</b>. Yes, it flips the sign: within each midterm group, more visits go with <i>higher</i> finals. Don't cancel office hours; the short regression is mixing up "who goes" with "what going does."</p></div></div></details>
+  </div>
+  </div>
+
+  <div class="mine"><p class="mh">What to remember</p><ul>
+    <li>Leaving out W biases \(\hat\beta_1\) only if W affects Y <b>and</b> moves with X.</li>
+    <li>Bias = W's effect × how much W rises with X. Its sign is the product of the two signs, and it can flip the slope's sign.</li>
+    <li>Controls remove bias only from what we include. Designs that make the treatment unrelated to u (lotteries) remove it from everything.</li>
+  </ul></div>
+  <h3>Concept checks</h3>
+  <details><summary>A regression of crime on police officers per capita across cities finds more police go with more crime. Name the omitted variable and sign the bias.</summary><div class="body"><div class="ans"><p>W = underlying crime risk (or city size, poverty). Dangerous cities hire more police (cov &gt; 0), and they have more crime (β₂ &gt; 0) ⇒ upward bias; the true effect of police may be negative. Reverse causality is also at work.</p></div></div></details>
+  <details><summary>Why can't a bigger sample fix omitted variable bias?</summary><div class="body"><div class="ans"><p>More data makes \(\hat\beta_1\) settle more tightly, but on \(\beta_1\) + bias, not on \(\beta_1\). Sample size fights noise, not bias.</p></div></div></details>
+  <details><summary>An omitted variable affects Y strongly but is uncorrelated with X. What happens to \(\hat\beta_1\) and its standard error?</summary><div class="body"><div class="ans"><p>No bias (arrow 2 is missing). But it stays in u, making the errors bigger, so the SE is larger than it would be with W included.</p></div></div></details>
+  <details><summary>In a randomized experiment, is there omitted variable bias?</summary><div class="body"><div class="ans"><p>No. Random assignment makes the treatment uncorrelated with every W, so cov(X, W) = 0 for all of them.</p></div></div></details>
+</section>
+
+<section class="block" id="l11">
+  <p class="eyebrow">Lecture 11 · Mon Oct 19</p>
+  <h2>Multiple regression</h2>
+  <p class="lede">From diagnosing omitted variable bias to doing something about it. Reading: S&amp;W 6.2–6.8.</p>
+
+  <div class="journey">
+  <div class="stop"><p class="sl">Stop 1 · Mimic the experiment we can't run</p>
+    <p>In the ideal world we'd assign education by coin flip. Then ability would be the same on average in both groups, cov(education, ability) = 0, and the bias \(\beta_2\cdot\mathrm{cov}(Educ,Ability)/\mathrm{var}(Educ)\) would vanish.</p>
+    <p>In the real world, ability helps decide who gets educated <i>and</i> raises earnings. So ask the question "Why did you go to college? Why didn't your classmates?" Whatever answers it, if it also affects earnings, it's a source of bias.</p>
+    <p><b>The goal of regression is to mimic the experiment.</b> If we can't randomize education, we can at least compare people with the <i>same</i> ability:</p>
+    \[Earnings_i=\beta_0+\beta_1Education_i+\beta_2Ability_i+u_i\]
+    <div class="plain"><p class="ph">In plain words</p><p>"Holding ability constant" means: look only within groups of people who have the same ability, and compare those with more and less education there. In the picture with colored boxes (one per ability level), \(\beta_1\) comes from comparisons <i>inside</i> each box, not from comparing all college graduates with everyone else. If nothing else decides education within a box, education is "as good as randomly assigned" there.</p></div>
+    <p>Multiple regression answers two questions at once: the effect of college <i>holding ability constant</i>, and the effect of ability <i>holding education constant</i>.</p>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 2 · What's left in u?</p>
+    <p>Once ability is a regressor, it's no longer in u. But motivation, family connections, work experience, personality and field of study still are. For \(\beta_1\) to be causal, <b>holding ability fixed, each of these must have the same average at every level of education</b>.</p>
+    <details><summary>Slide question: what is the assumption if we are interested in the causal effect of ability instead?</summary><div class="body"><div class="ans"><p>Flip the roles: <b>holding education fixed, ability must be as good as randomly assigned</b>. Everything left in u (motivation, family background, connections) must have the same average at every ability level among people with the same education. That's hard to believe, since family background shapes both. There's also a subtlety: ability partly works <i>through</i> education, so holding education fixed measures only ability's effect beyond the education it leads to.</p></div></div></details>
+    <p>Family background, motivation and money still decide who gets educated, so \(\hat\beta_1\) can still be biased. The fix is to add more controls: \(X_1,X_2,\dots,X_k\).</p>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 3 · The model and how to read it</p>
+    \[Y_i=\beta_0+\underbrace{\beta_1X_{1i}}_{\text{variable of interest}}+\underbrace{\beta_2X_{2i}+\cdots+\beta_kX_{ki}}_{\text{control variables}}+u_i\]
+    <ul>
+      <li><b>Variable of interest</b> (X₁): the one whose causal effect we want. <b>Controls</b> (X₂…Xₖ): there to remove omitted variable bias from X₁. Controls don't need to be randomly assigned and their own coefficients need not be causal.</li>
+      <li><b>Intercept</b>: \(\beta_0=E[Y\mid\text{all }X=0]\), the mean of Y when every regressor is zero (often outside the data).</li>
+      <li><b>Slope</b>: \(\beta_1\) = change in mean Y for a one-unit increase in X₁, <b>holding the other regressors constant</b> at any values.</li>
+      <li>Estimation is still least squares: choose the β̂'s that minimize the sum of squared residuals. The formulas need matrix algebra, so Stata does it: <code>regress Y X1 X2</code>. Predictions and residuals work as before: \(\hat Y_i=\hat\beta_0+\hat\beta_1X_{1i}+\cdots\), \(\hat u_i=Y_i-\hat Y_i\).</li>
+    </ul>
+    <details><summary>Slide question: interpret the coefficient on sat in <code>regress earnings sat</code> (820 colleges): 77.78.</summary><div class="body"><div class="ans"><p>Across these 820 colleges, those whose admitted students score one more SAT point have median earnings $77.78 higher on average ($7,778 per 100 points). Nothing is held constant, so it includes everything that moves with SAT, like parents' income.</p></div></div></details>
+    <details><summary>Slide question: interpret the coefficients in <code>regress earnings sat lnparinc</code>: sat 59.91, lnparinc 10,756.59.</summary><div class="body"><div class="ans">
+      <p><b>sat:</b> comparing colleges whose students' parents have the same income, one more SAT point goes with $59.91 higher median earnings ($5,991 per 100 points).</p>
+      <p><b>lnparinc:</b> this is linear-log. Holding SAT fixed, colleges whose students' parents are 1% richer have median earnings about 0.01 × 10,757 ≈ <b>$108</b> higher.</p>
+      <p>(The SEs here differ slightly from Lecture 10's because this output is not robust; always report robust ones.)</p></div></div></details>
+    <details><summary>Slide question: adding controls one at a time. How does the coefficient on SAT change, and why?</summary><div class="body"><div class="ans">
+      <div class="tw"><table><tr><th>Controls added</th><th class="num">SAT slope</th><th class="num">R²</th></tr>
+      <tr><td>none</td><td class="num">77.8</td><td class="num">0.524</td></tr>
+      <tr><td>+ ln(parents' income)</td><td class="num">59.9</td><td class="num">0.542</td></tr>
+      <tr><td>+ public</td><td class="num">59.9</td><td class="num">0.542</td></tr>
+      <tr><td>+ admission rate</td><td class="num">53.0</td><td class="num">0.547</td></tr>
+      <tr><td>+ ln(enrollment)</td><td class="num">49.8</td><td class="num">0.551</td></tr></table></div>
+      <p>The slope falls each time we add a control that both affects earnings <i>and</i> moves with SAT: each one takes back the part of the effect the short regression wrongly credited to SAT. <b>Public</b> changes nothing (coefficient −125, SE 826: no effect once parents' income is in), so it fails arrow 1. <b>Admission rate</b> matters (−6,194: more selective ↔ higher earnings) and is tied to SAT, so the slope drops. Notice R² barely moves (0.524 → 0.551) while the slope drops by a third: <b>R² tells you nothing about bias</b>.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 4 · The assumption for causality, upgraded</p>
+    <p><b>Conditional mean independence:</b> \(E[u_i\mid X_{1i},\dots,X_{ki}]=E[u_i]\). When we care only about X₁:</p>
+    <ul><li>Holding the controls constant, X₁ is <b>as good as randomly assigned</b>.</li><li>Whatever is still omitted must be unrelated to X₁ once the controls are held fixed.</li><li>The controls themselves need not be randomly assigned.</li></ul>
+    <details><summary>Slide question: is this assumption more plausible than \(E[u_i\mid X_i]=0\) without controls?</summary><div class="body"><div class="ans"><p>Yes, usually more plausible: we have removed the confounders we could measure, so less is left in u. But it is still an assumption. Anything unmeasured (motivation, talent) that differs with X₁ among observations with the same controls still biases \(\hat\beta_1\). Controls make the comparison fairer; only randomization makes it fair by design.</p></div></div></details>
+    <details><summary>Slide exercise: does your regression satisfy conditional mean independence? (Worked example)</summary><div class="body"><div class="ans">
+      <p>(1) <b>Question:</b> does throwing harder lower runs allowed? Y = earned runs allowed per 9 innings, X₁ = average fastball velocity; controls: years of experience, age, quality of opponents faced.</p>
+      <p>(2) <b>Left out:</b> pitch movement, command, the defense behind the pitcher. Harder throwers tend to have better stuff overall, so these differ with X₁.</p>
+      <p>(3) <b>Direction:</b> W = command. It lowers runs (β₂ &lt; 0) and goes with velocity (cov &gt; 0), so the bias is negative: velocity's run-saving effect looks <b>bigger</b> than it is (overstated).</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 5 · Perfect multicollinearity</p>
+    <p>Regressors are <b>perfectly multicollinear</b> if one is an exact linear function of the others. Key insight: the intercept is a hidden regressor equal to 1 for everyone, \(Y_i=\beta_0\cdot1+\beta_1X_{1i}+\cdots\).</p>
+    <details><summary>Slide question (detective work): Y is earnings. Which are perfectly multicollinear? (a) years and months of education (b) dummies for male and female (c) age and age² (d) income and wealth (e) shares of the day spent working and not working</summary><div class="body"><div class="ans">
+      <p>(a) <b>Yes</b>: months = 12 × years.</p>
+      <p>(b) <b>Yes</b>: male + female = 1, the intercept's hidden regressor (the dummy variable trap).</p>
+      <p>(c) <b>No</b>: age² is a nonlinear function of age, so it can't be written as a <i>linear</i> combination.</p>
+      <p>(d) <b>No</b>: highly correlated but not exactly; that's <i>imperfect</i> multicollinearity.</p>
+      <p>(e) <b>Yes</b>: working + not working = 1 = the intercept.</p></div></div></details>
+    <ul>
+      <li><b>Most common case:</b> a full set of dummies that are mutually exclusive and exhaustive (every observation in exactly one category). They add up to 1, duplicating the intercept.</li>
+      <li><b>Why it's a problem:</b> mathematically, a division by zero in the OLS formula. Intuitively, the question makes no sense: "the effect of being male, holding female constant" asks you to change one without the other.</li>
+      <li><b>Imperfect multicollinearity</b> (income and wealth highly but not perfectly correlated): OLS works but is <b>imprecise</b>, with big SEs, because few observations separate the two.</li>
+      <li><b>Fix:</b> find the culprits and drop one. With dummies, the dropped category becomes the <b>reference category</b>: every dummy coefficient is a difference from it.</li>
+    </ul>
+    <details><summary>Slide question: birth weight on season-of-birth dummies (416,315 births). (1) In column (1), which excludes fall, what is the average birth weight in fall? In spring? (2) Do columns (1)–(4) predict the same average for each season? (3) In column (5), what are winter and fall compared with?</summary><div class="body"><div class="ans">
+      <p>(1) Fall is the reference, so fall = the intercept, <b>3,345 g</b>. Spring = 3,345 + 20.89 ≈ <b>3,366 g</b>.</p>
+      <p>(2) <b>Yes.</b> Every column gives winter ≈ 3,343, spring ≈ 3,366, summer ≈ 3,349, fall ≈ 3,345. Only the reference category changes, so the coefficients change but the predicted season means don't. Check column (2), which excludes winter: 3,343 + 22.57 = 3,366 for spring ✓.</p>
+      <p>(3) Column (5) excludes both spring and summer, so its reference group is <b>spring and summer births together</b> (intercept 3,357). Winter is 13.78 g and fall 12.10 g lighter than that combined group. Column (6), with spring only, compares spring with all other seasons combined (+20.12).</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 6 · R² and adjusted R²</p>
+    <ul>
+      <li>R² is the same formula as before: \(R^2=ESS/TSS=1-SSR/TSS\).</li>
+      <li><b>R² never falls when you add a regressor.</b> OLS could always set the new coefficient to 0 and keep the old fit, and by chance it nearly always finds a little to fit. So R² flatters big models.</li>
+      <li><b>Adjusted R²</b> penalizes extra regressors: \(\bar R^2=1-\frac{n-1}{n-k-1}\cdot\frac{SSR}{TSS}\). Since \(\frac{n-1}{n-k-1}&gt;1\), it is always below R². Adding a regressor lowers SSR (pushes it up) but raises the penalty factor (pushes it down); it can go either way.</li>
+    </ul>
+    <details><summary>Slide question: can the R² be negative? Can the adjusted R² be negative?</summary><div class="body"><div class="ans"><p><b>R²: no</b> (with an intercept). OLS can always do at least as well as predicting Ȳ for everyone, so SSR ≤ TSS and R² ≥ 0. <b>Adjusted R²: yes.</b> If the regressors explain almost nothing and k is large relative to n, the penalty can push it below 0.</p></div></div></details>
+    <div class="plain"><p class="ph">In plain words</p><p>Don't choose controls by R². For causal questions, include what removes bias from your variable of interest, whether or not it raises R². For prediction, more regressors can fit the sample better and still predict new data worse.</p></div>
+  </div>
+  </div>
+
+  <div class="mine"><p class="mh">What to remember</p><ul>
+    <li>Multiple regression adds the omitted variable as a regressor and estimates X's effect <b>holding the others constant</b>.</li>
+    <li>Each slope is the change in mean Y for a one-unit increase in its regressor, with the others fixed.</li>
+    <li>Key assumption: holding the controls constant, X₁ is as good as randomly assigned.</li>
+    <li>Perfectly multicollinear regressors can't all go in: drop one and read the rest relative to it.</li>
+    <li>R² never falls when you add a regressor; adjusted R² can. Neither should decide what to include in a causal regression.</li>
+  </ul></div>
+  <h3>Concept checks</h3>
+  <details><summary>You add a control and the coefficient on X₁ barely changes. What does that suggest about that control?</summary><div class="body"><div class="ans"><p>It wasn't an important source of omitted variable bias for X₁: either it doesn't affect Y given the other regressors, or it isn't related to X₁ (like "public" in the college table).</p></div></div></details>
+  <details><summary>A regression includes dummies for freshman, sophomore, junior and senior plus an intercept. What goes wrong and how do you fix it?</summary><div class="body"><div class="ans"><p>Perfect multicollinearity: the four dummies sum to 1, the intercept. Drop one (say freshman); the other coefficients become differences from freshmen.</p></div></div></details>
+  <details><summary>Adding a regressor raised R² from 0.30 to 0.31 but lowered adjusted R². Should you drop it?</summary><div class="body"><div class="ans"><p>Not on that basis. If it's a confounder for your variable of interest, keep it: the goal is an unbiased coefficient, not a higher R².</p></div></div></details>
+  <details><summary>Income and wealth are both in a regression; their coefficients have huge standard errors. Why?</summary><div class="body"><div class="ans"><p>Imperfect multicollinearity: they move together so closely that the data have little information to separate their individual effects. Estimates are imprecise, not biased.</p></div></div></details>
+  <details><summary>Does controlling for more variables always reduce bias?</summary><div class="body"><div class="ans"><p>It removes bias from the confounders you add. It can't touch what you leave out, and adding variables that are themselves results of X₁ (like controlling for occupation when studying education's effect on earnings) can remove part of the effect you want to measure.</p></div></div></details>
+</section>
+
 <section class="block" id="ahead">
-  <p class="eyebrow">Lectures 10–13 · Oct 14–21 <span class="pill warn">Preview</span></p>
+  <p class="eyebrow">Lecture 12 onward · from Wed Oct 21 <span class="pill warn">Preview</span></p>
   <h2>Still to come before the midterm</h2>
-  <p class="lede">These topics are on the midterm (S&amp;W ch. 6–9) but have no slides yet. This is a textbook-based preview; check it against your lectures.</p>
-  <h3>Omitted variable bias (S&amp;W 6.1)</h3>
-  <p>OVB arises when an omitted variable Z (1) determines Y, so it sits in \(u\), and (2) is correlated with X. Then \(\mathrm{cov}(X,u)\neq0\) and</p>
-  \[\hat\beta_1\xrightarrow{p}\beta_1+\rho_{Xu}\frac{\sigma_u}{\sigma_X}\qquad\text{or, with true model }Y=\beta_0+\beta_1X+\beta_2Z+e:\quad\hat\beta_1\xrightarrow{p}\beta_1+\beta_2\frac{\mathrm{cov}(X,Z)}{\mathrm{var}(X)}\]
-  <div class="tw"><table><tr><th></th><th>corr(X, Z) &gt; 0</th><th>corr(X, Z) &lt; 0</th></tr>
-  <tr><th>Z raises Y (β₂ &gt; 0)</th><td>upward bias</td><td>downward bias</td></tr>
-  <tr><th>Z lowers Y (β₂ &lt; 0)</th><td>downward bias</td><td>upward bias</td></tr></table></div>
-  <p>Example: earnings on height omitting sex (PS2 Problem 6). Men are taller and, on average, earn more ⇒ upward bias. College earnings on SAT omitting family income ⇒ upward bias.</p>
-  <h3>Multiple regression (S&amp;W 6.2–6.7, ch. 7)</h3>
+  <p class="lede">Lecture 11 said next comes hypothesis tests with several regressors and nonlinear regressions (S&amp;W 7.1–7.4, 8.1, 8.3). This is a textbook-based preview; check it against the slides when they're posted.</p>
+  <h3>Tests with several regressors (S&amp;W ch. 7)</h3>
   <ul>
-    <li>\(Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\cdots+u_i\). \(\beta_1\) is the effect of a one-unit change in \(X_1\) <b>holding the other regressors constant</b>.</li>
-    <li>Assumptions: \(E[u_i\mid X_{1i},\dots,X_{ki}]=0\); i.i.d.; large outliers rare; <b>no perfect multicollinearity</b> (e.g. dummy variable trap: including every category dummy plus a constant).</li>
-    <li>Imperfect multicollinearity is allowed but inflates SEs. Adjusted \(\bar R^2=1-\frac{n-1}{n-k-1}\frac{SSR}{TSS}\) penalizes extra regressors; R² never falls when you add one.</li>
-    <li><b>Control variables</b> need not be causal themselves; they are there to make the variable of interest's coefficient unbiased (conditional mean independence).</li>
-    <li>Joint hypotheses (\(\beta_1=\beta_2=0\)) use the <b>F-statistic</b>, not two separate t-tests. With one restriction, F = t².</li>
+    <li><b>One coefficient at a time:</b> exactly as before, \(t=(\hat\beta_j-\beta_{j,0})/SE(\hat\beta_j)\), with robust SEs. Read it as "holding the other regressors fixed."</li>
+    <li><b>Several at once</b> (\(H_0:\beta_1=\beta_2=0\)): use the <b>F-statistic</b>, not two separate t-tests. Two t-tests at 5% each reject a true joint null more than 5% of the time, and they ignore the correlation between the estimates. With one restriction, F = t².</li>
+    <li>Concept to know: a variable can be individually insignificant but jointly significant with another when the two are highly correlated (imperfect multicollinearity).</li>
   </ul>
-  <h3>Nonlinear regression (S&amp;W ch. 8)</h3>
+  <h3>Nonlinear regression (S&amp;W 8.1, 8.3)</h3>
   <ul>
-    <li>Polynomials: \(Y=\beta_0+\beta_1X+\beta_2X^2\); effect of ΔX depends on X: \(\Delta\hat Y\approx(\hat\beta_1+2\hat\beta_2X)\Delta X\). Compute predicted Y at two X values and subtract.</li>
-    <li>Logs (Lecture 8).</li>
-    <li>Interactions: \(Y=\beta_0+\beta_1D_1+\beta_2D_2+\beta_3(D_1D_2)\): \(\beta_3\) is the extra effect of \(D_1\) when \(D_2=1\). With \(X\times D\): different slopes by group. With \(X_1\times X_2\): the effect of \(X_1\) is \(\beta_1+\beta_3X_2\).</li>
+    <li><b>Polynomials:</b> \(Y=\beta_0+\beta_1X+\beta_2X^2+u\). The effect of X depends on where you start. Compute the predicted Y at two X values and subtract. A negative \(\beta_2\) means the effect shrinks as X grows (diminishing returns).</li>
+    <li><b>Logs:</b> Lecture 8.</li>
+    <li><b>Interactions:</b> with two dummies, \(Y=\beta_0+\beta_1D_1+\beta_2D_2+\beta_3D_1D_2\), \(\beta_3\) is how much the effect of \(D_1\) changes when \(D_2=1\). With \(X\times D\), the two groups get different slopes. With \(X_1\times X_2\), the effect of \(X_1\) is \(\beta_1+\beta_3X_2\).</li>
   </ul>
-  <h3>Assessing studies (S&amp;W ch. 9)</h3>
+  <h3>Assessing studies (S&amp;W ch. 9, if covered)</h3>
   <ul>
-    <li><b>Internal validity threats</b>: (1) omitted variables, (2) wrong functional form, (3) errors-in-variables (measurement error in X biases \(\hat\beta_1\) toward zero: attenuation), (4) sample selection (selection on Y), (5) simultaneous causality (Y also causes X). Plus wrong SEs (heteroskedasticity, correlated errors).</li>
-    <li><b>External validity</b>: differences in population and setting (institutions, laws, time) between the study and the target.</li>
+    <li><b>Internal validity threats:</b> omitted variables, wrong functional form, measurement error in X (biases the slope toward zero), sample selection, simultaneous causality (Y also causes X). Plus wrong SEs.</li>
+    <li><b>External validity:</b> differences in population and setting between the study and where you want to apply it.</li>
   </ul>
 </section>
 <section class="block" id="ws">
@@ -962,6 +1186,10 @@ Linear regression                       Number of obs =    420
   <details><summary>A balance table with all p-values above 0.10 proves the estimate is causal.</summary><div class="body"><div class="ans"><p>False. It checks observed pre-treatment traits only; attrition, non-compliance and spillovers can still bias the result.</p></div></div></details>
   <details><summary>An omitted variable that affects Y but is uncorrelated with X biases β̂₁.</summary><div class="body"><div class="ans"><p>False. OVB needs both conditions: Z affects Y <i>and</i> is correlated with X. It does make the SER larger.</p></div></div></details>
   <details><summary>With ln(Y) on X, β̂₁ = 0.40 means one more unit of X raises Y by exactly 40%.</summary><div class="body"><div class="ans"><p>False. 100β₁% is a small-change approximation; exactly e^0.40 − 1 = 49%.</p></div></div></details>
+  <details><summary>Adding a control variable that raises R² proves the control was needed to remove bias.</summary><div class="body"><div class="ans"><p>False. R² always rises (weakly) with a new regressor. A control removes bias only if it affects Y and is correlated with X₁; check whether the coefficient on X₁ moves.</p></div></div></details>
+  <details><summary>Including dummies for all four seasons plus an intercept lets you estimate each season's effect.</summary><div class="body"><div class="ans"><p>False. They sum to 1, the intercept's hidden regressor: perfect multicollinearity. Drop one season; the rest are read relative to it.</p></div></div></details>
+  <details><summary>In multiple regression, β₁ is the effect of X₁ holding the other regressors constant.</summary><div class="body"><div class="ans"><p>True as an interpretation. It is a <i>causal</i> effect only if, holding those regressors constant, X₁ is as good as randomly assigned.</p></div></div></details>
+  <details><summary>If omitting W makes the short slope too large, then β₂ and cov(X, W) must both be positive.</summary><div class="body"><div class="ans"><p>False. Upward bias only needs the two signs to match: both positive or both negative.</p></div></div></details>
 </section>
 
 <footer class="small" style="padding-block:28px">Built from the ECON UN3412 Fall 2026 course files (lectures 1–9, worksheets, recitations, PS1–PS2) and your own lecture notes. Answers written with Claude as a study aid; check them against posted solutions.</footer>
@@ -976,12 +1204,12 @@ Linear regression                       Number of obs =    420
   if (el) el.textContent = d > 0 ? d : (d === 0 ? 'Today' : 'Done');
   var boxes = document.querySelectorAll('#planlist input[type=checkbox]');
   var saved = {};
-  try { saved = JSON.parse(localStorage.getItem('un3412-plan') || '{}'); } catch (e) {}
+  try { saved = JSON.parse(localStorage.getItem('un3412-plan2') || '{}'); } catch (e) {}
   boxes.forEach(function(b){
     if (saved[b.id]) b.checked = true;
     b.addEventListener('change', function(){
       saved[b.id] = b.checked;
-      try { localStorage.setItem('un3412-plan', JSON.stringify(saved)); } catch (e) {}
+      try { localStorage.setItem('un3412-plan2', JSON.stringify(saved)); } catch (e) {}
     });
   });
   document.querySelectorAll('[data-open],[data-close]').forEach(function(btn){
