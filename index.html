@@ -155,7 +155,8 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
     <li><a href="#l9"><span class="n">L9</span>Properties of OLS</a></li>
     <li><a href="#l10"><span class="n">L10</span>Omitted variable bias</a></li>
     <li><a href="#l11"><span class="n">L11</span>Multiple regression</a></li>
-    <li><a href="#ahead"><span class="n">L12+</span>Still to come</a></li>
+    <li><a href="#l12"><span class="n">L12</span>Interactions &amp; polynomials</a></li>
+    <li><a href="#ahead"><span class="n">L13</span>Still to come</a></li>
   </ul>
   <h4>Answers</h4>
   <ul>
@@ -191,7 +192,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
     <li><b>What the course rewards:</b> reading regression output, interpreting coefficients in words with units, computing t-stats, p-values and CIs by hand, and deciding whether a comparison is causal (selection bias, \(E[u_i\mid X_i]=0\)).</li>
     <li><b>Bring the critical values in your head:</b> 1.645 (10%), 1.96 (5%), 2.576 (1%). Know \(\Phi(1.96)=0.975\), \(\Phi(1.645)=0.95\), \(\Phi(1)=0.841\), \(\Phi(2)=0.977\).</li>
   </ul>
-  <div class="callout"><p><b>Concepts over math.</b> The exam leans on understanding, not computation. Start with <a href="#story">"The one story"</a>, which connects every lecture, then use the "In plain words" boxes and concept checks. Notes now cover Lectures 1–11; <a href="#ahead">"Still to come"</a> previews what follows from the textbook.</p></div>
+  <div class="callout"><p><b>Concepts over math.</b> The exam leans on understanding, not computation. Start with <a href="#story">"The one story"</a>, which connects every lecture, then use the "In plain words" boxes and concept checks. Notes now cover Lectures 1–12; <a href="#ahead">"Still to come"</a> previews what follows from the textbook.</p></div>
 </section>
 
 <section class="block" id="plan">
@@ -200,7 +201,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
   <div class="plan" id="planlist">
     <label><input type="checkbox" id="s1"><span class="d">Wed Oct 21</span><span><span class="phase ph1">Notes</span> Lectures 1–4 (causality vs. association, probability, inference). Read each section here, then write your own one-page summary without looking. Do the concept checks. Go to lecture.</span></label>
     <label><input type="checkbox" id="s2"><span class="d">Thu Oct 22</span><span><span class="phase ph1">Notes</span> Lectures 5–8 (potential outcomes, selection bias, regression on a dummy, OLS, R² and logs). Fix the spots flagged in "Fix in your notes."</span></label>
-    <label><input type="checkbox" id="s3"><span class="d">Fri Oct 23</span><span><span class="phase ph1">Notes</span> Lectures 9–11 plus Wednesday's lecture (properties of OLS, omitted variable bias, multiple regression). Then read "The one story" at the top and explain it out loud in five minutes.</span></label>
+    <label><input type="checkbox" id="s3"><span class="d">Fri Oct 23</span><span><span class="phase ph1">Notes</span> Lectures 9–12 (properties of OLS, omitted variable bias, multiple regression, interactions and polynomials). Then read "The one story" at the top and explain it out loud in five minutes.</span></label>
     <label><input type="checkbox" id="s4"><span class="d">Sat Oct 24</span><span><span class="phase ph2">Practice sets</span> Worksheets 2, 3, 4, 7 and 10 and the recitation problems, without peeking. Check against the worksheet solutions; redo anything you missed.</span></label>
     <label><input type="checkbox" id="s5"><span class="d">Sun Oct 25</span><span><span class="phase ph2">Practice sets</span> Redo PS1 and PS2 from a blank page. Use the problem-set guide to check you picked the right concept and formula for each question. List your three weakest topics.</span></label>
     <label><input type="checkbox" id="s6"><span class="d">Mon Oct 26</span><span><span class="phase ph3">Test</span> Review lecture (bring your weak-topic list). Evening: all concept checks and the True/False drill; for each miss, reread that lecture section.</span></label>
@@ -435,6 +436,7 @@ Residuals 17868 1.2812e+13 7.1702e+08</code></pre>
     <div class="stop"><p class="sl">L9 · When can we trust the slope?</p><p>The slope is right on average and gets closer with more data only if the error term has nothing systematic to do with X: \(E[u\mid X]=0\). More data shrinks noise but never fixes bias.</p></div>
     <div class="stop"><p class="sl">L10 · What goes wrong: omitted variables</p><p>If something left in u affects Y <i>and</i> moves with X, the slope picks up its effect. That is omitted variable bias, and you can predict its direction from two signs.</p></div>
     <div class="stop"><p class="sl">L11 · The fix we can try: multiple regression</p><p>Put the omitted variable into the regression and compare observations that share its value. This removes bias from the variables we include, never from the ones we leave out.</p></div>
+    <div class="stop"><p class="sl">L12 · Effects that differ</p><p>The effect of X may differ across groups (interactions: X × D lets each group have its own slope) or across values of X itself (polynomials: X² lets the slope bend). These are still ordinary regressions, tested with the same t-test.</p></div>
   </div>
   <div class="tip"><p>Almost any concept question can be answered by asking three things in order: (1) What is being compared? (2) What else differs between the groups being compared (what is in u)? (3) Does that make the estimate too big or too small?</p></div>
 </section>
@@ -1057,26 +1059,149 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
   <details><summary>Does controlling for more variables always reduce bias?</summary><div class="body"><div class="ans"><p>It removes bias from the confounders you add. It can't touch what you leave out, and adding variables that are themselves results of X₁ (like controlling for occupation when studying education's effect on earnings) can remove part of the effect you want to measure.</p></div></div></details>
 </section>
 
+<section class="block" id="l12">
+  <p class="eyebrow">Lecture 12 · Wed Oct 21</p>
+  <h2>Inference in multiple regression; interactions and polynomials</h2>
+  <p class="lede">Last lecture added control variables. This one asks two new questions: how do we test a coefficient when there are several regressors, and what if the effect of X isn't the same for everyone, or at every value of X? Reading: S&amp;W 7.1, 8.1–8.3.</p>
+
+  <div class="journey">
+  <div class="stop"><p class="sl">Stop 1 · Testing one coefficient: nothing changes</p>
+    <p>With several regressors, testing one coefficient works exactly as before:</p>
+    \[t=\frac{\hat\beta_j-\beta_{j,0}}{SE(\hat\beta_j)},\qquad \hat\beta_j\pm1.96\,SE(\hat\beta_j)\]
+    <p>Same t, same p-value, same confidence interval. The only new thing is the sentence you say: \(\beta_j\) is the effect of \(X_j\) <b>holding the other regressors fixed</b>.</p>
+    <p><b>The data:</b> 5,000 formal jobs in Brazil, ages 25–60, in four states: Distrito Federal (Brasília), Goiás, Mato Grosso, Mato Grosso do Sul. Pay is monthly, in reais.</p>
+    \[pay_i=\beta_0+\beta_1educ_i+\beta_2age_i+\beta_3df_i+\beta_4mt_i+\beta_5ms_i+u_i\]
+    <details><summary>Slide question: there is no dummy for Goiás. Why not? How do we read the coefficients on df, mt and ms?</summary><div class="body"><div class="ans">
+      <p>Every job is in exactly one of the four states, so the four dummies would add up to 1, the same as the intercept: perfect multicollinearity (the dummy variable trap). One state has to be left out, and Goiás is it.</p>
+      <p>Goiás becomes the <b>reference category</b>. Each state coefficient is the average pay difference between that state and Goiás, for workers with the same schooling and age. E.g. df = 1,139: jobs in Brasília pay R$1,139 more a month than jobs in Goiás, holding education and age fixed.</p></div></div></details>
+<pre><code>. regress pay educ age df mt ms, robust          n = 5,000   R² = 0.1493
+------------------------------------------------------------------------------
+             |               Robust
+         pay | Coefficient  std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        educ |   404.9997   20.90069   19.38   0.000     364.0252    445.9742
+         age |   53.13278   5.431702    9.78   0.000     42.48426     63.7813
+          df |    1139.27   135.9411    8.38   0.000      872.766    1405.774
+          mt |   445.9945   105.3751    4.23   0.000      239.413     652.576
+          ms |   256.2119   107.5372    2.38   0.017     45.39187     467.032
+       _cons |  -3709.156   395.5077   -9.38   0.000    -4484.525   -2933.787</code></pre>
+    <details><summary>Slide question: interpret the coefficient on educ. Is it different from zero at the 5% level? Give its 95% confidence interval.</summary><div class="body"><div class="ans">
+      <p>Comparing workers of the same age in the same state, one more year of schooling goes with <b>R$405 more monthly pay</b> on average.</p>
+      <p>Yes: t = 405.0 / 20.9 = 19.38, far above 1.96 (p ≈ 0). 95% CI: <b>[R$364, R$446]</b>, i.e. 405 ± 1.96 × 20.9.</p>
+      <p>Concept note: "different from zero" is about noise. It says nothing about whether R$405 is the <i>causal</i> return to school; ability and family background are still in u.</p></div></div></details>
+    <details><summary>Slide question: holding schooling and age fixed, do jobs in Mato Grosso do Sul pay differently from jobs in Goiás?</summary><div class="body"><div class="ans">
+      <p>Look at the <b>ms</b> row, because Goiás is the reference. Jobs in Mato Grosso do Sul pay R$256 more a month than in Goiás, for the same schooling and age. t = 2.38, p = 0.017: <b>yes at 5%</b> (and at 10%), but <b>not at 1%</b> (2.38 &lt; 2.576). The 95% CI [R$45, R$467] excludes 0 but is wide.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 2 · When the effect depends on someone's group: two dummies</p>
+    <p>A picture from all 2.7 million Brazilian formal jobs: average pay rises with age much faster for college graduates than for workers without a degree. A regression with one slope for everyone can't show that.</p>
+    <p>Effects that depend on another variable are everywhere: the effect of price on demand varies with income, advertising's effect on sales varies with competition, sleep's effect on test scores varies with caffeine. This matters for policy, because it tells you <b>who</b> a policy helps most.</p>
+    <p>Start with two dummies: \(D_1=1\) if 35–45 ("old"), \(D_2=1\) if college degree.</p>
+    \[Pay_i=\beta_0+\beta_1D_{1i}+\beta_2D_{2i}+u_i\]
+    <p>Before \(D_2\) is added, "where is college?": it's in u. Once it's in, β₁ is the old-young gap holding college fixed, and β₂ is the college gap holding age group fixed.</p>
+    <details><summary>Slide question: can the old-young pay gap differ between workers with and without a degree?</summary><div class="body"><div class="ans"><p><b>No, not in this model.</b> β₁ is a single number, so the model forces the old-young gap to be the same for graduates and non-graduates. To let it differ, we need an interaction term.</p></div></div></details>
+    <p><b>The interaction:</b> add the product as another regressor.</p>
+    \[Pay_i=\beta_0+\beta_1D_{1i}+\beta_2D_{2i}+\beta_3(D_{1i}\times D_{2i})+u_i\]
+    <div class="tw"><table><tr><th></th><th>Young (D₁ = 0)</th><th>Old (D₁ = 1)</th><th>Old − young gap</th></tr>
+    <tr><th>No degree (D₂ = 0)</th><td>β₀</td><td>β₀ + β₁</td><td><b>β₁</b></td></tr>
+    <tr><th>Degree (D₂ = 1)</th><td>β₀ + β₂</td><td>β₀ + β₁ + β₂ + β₃</td><td><b>β₁ + β₃</b></td></tr></table></div>
+    <div class="plain"><p class="ph">In plain words</p><p>β₃ is the <b>extra</b> old-young gap for college graduates: the difference between the two gaps. Fill in the 2×2 table above and every coefficient falls out by subtraction.</p></div>
+    <details><summary>Slide question: how would you test whether the old-young gap is the same for both groups?</summary><div class="body"><div class="ans"><p>The two gaps are β₁ and β₁ + β₃, so they are equal exactly when <b>β₃ = 0</b>. Use the t-test on the interaction coefficient: H₀: β₃ = 0 vs. H₁: β₃ ≠ 0.</p></div></div></details>
+<pre><code>. regress pay old college old_college if age &lt;= 45, robust      n = 3,681
+-------------+----------------------------------------------------------------
+         old |   266.6843   63.20259    4.22   0.000     142.7687    390.5999
+     college |   2065.646   177.2791   11.65   0.000     1718.071    2413.221
+ old_college |   2392.611   330.0662    7.25   0.000     1745.481    3039.742
+       _cons |   2659.249   38.50986   69.05   0.000     2583.746    2734.752</code></pre>
+    <details><summary>Slide question: what is the old-young pay gap for workers without a degree? With a degree? Is the difference statistically significant?</summary><div class="body"><div class="ans">
+      <p><b>No degree:</b> β̂₁ = <b>R$267</b> a month. <b>Degree:</b> β̂₁ + β̂₃ = 267 + 2,393 = <b>R$2,659</b> a month, about ten times bigger.</p>
+      <p>The difference is β̂₃ = 2,393, t = 7.25, p ≈ 0: <b>yes, significant</b>. Pay rises much more between the early 30s and early 40s for graduates.</p>
+      <p>Reading the rest: _cons 2,659 = average pay of young workers without a degree; college 2,066 = the degree premium among young workers.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 3 · A dummy times a continuous variable: two lines</p>
+    <p>Now age \(X\) is continuous and \(D=1\) for a college degree:</p>
+    \[Pay_i=\beta_0+\beta_1X_i+\beta_2D_i+\beta_3(X_i\times D_i)+u_i\]
+    <details><summary>Slide question: (1) What is the regression line (intercept and slope) for workers without a degree? With a degree? (2) Which term changes the intercept? Which changes the slope?</summary><div class="body"><div class="ans">
+      <p>(1) Plug in D. <b>No degree</b> (D = 0): intercept β₀, slope β₁. <b>Degree</b> (D = 1): intercept β₀ + β₂, slope β₁ + β₃.</p>
+      <p>(2) <b>β₂</b> (on D) shifts the <b>intercept</b>; <b>β₃</b> (on X × D) changes the <b>slope</b>. Without the interaction, the two lines would be parallel.</p></div></div></details>
+<pre><code>. regress pay age college age_college if age &lt;= 45, robust      n = 3,681
+-------------+----------------------------------------------------------------
+         age |   21.52126   5.184852    4.15   0.000     11.35579    31.68673
+     college |  -5106.129   988.6579   -5.16   0.000    -7044.501   -3167.757
+ age_college |    240.786   30.42487    7.91   0.000     181.1348    300.4373
+       _cons |    2049.88   174.2426   11.76   0.000     1708.259    2391.502
+
+. test college age_college
+ ( 1)  college = 0
+ ( 2)  age_college = 0
+       F(  2,  3677) =  202.49
+            Prob &gt; F =    0.0000</code></pre>
+    <details><summary>Slide question: (1) write the regression line for each group and interpret β̂₃. (2) Does pay rise faster with age for college graduates?</summary><div class="body"><div class="ans">
+      <p>(1) <b>No degree:</b> Pay = 2,050 + 21.5 × Age. <b>Degree:</b> Pay = (2,050 − 5,106) + (21.5 + 240.8) × Age = −3,056 + 262.3 × Age.</p>
+      <p>β̂₃ = 240.8: each extra year of age adds <b>R$241 more</b> to monthly pay for graduates than for non-graduates. Graduates' pay rises R$262 a year; non-graduates' R$22.</p>
+      <p>(2) <b>Yes.</b> The test is H₀: β₃ = 0: t = 7.91, p ≈ 0, reject.</p>
+      <p>Don't read college = −5,106 as "a degree lowers pay." It is the gap at <b>age 0</b>, outside the data. The gap at age a is −5,106 + 240.8a: R$914 at 25, R$3,321 at 35, R$5,729 at 45.</p>
+      <p>The <code>test</code> line is an <b>F-test</b> of both college terms at once (H₀: β₂ = 0 and β₃ = 0), i.e. "graduates and non-graduates have the same line." F = 202.5, p ≈ 0: reject. More on F-tests next lecture.</p></div></div></details>
+    <p><b>Alternative:</b> run one regression for each group. You get the same two lines, and the difference in slopes equals β̂₃.</p>
+    <details><summary>Slide question: so what is the advantage of estimating the interaction model?</summary><div class="body"><div class="ans"><p>One regression hands you the difference between the groups, β̂₃, <b>with its standard error</b>, so you can test whether the slopes differ with a single t-test. Two separate regressions give two slopes but no direct SE or test for their difference. The interaction model can also keep other control variables with a common effect for both groups, using the whole sample.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 4 · When the effect depends on X itself: polynomials</p>
+    <p><b>Two kinds of linearity.</b> \(Y=\beta_0+\beta_1X+u\) is linear in the <b>parameters</b> (no \(\beta_1^2\)) and linear in the <b>regressors</b> (no \(X^2\)). OLS only needs linearity in the parameters. So \(Y=\beta_0+\beta_1X+\beta_2X^2+u\) is still a "linear regression" that OLS can estimate; \(Y=\beta_0+\beta_1^2X+u\) is not.</p>
+    <p><b>The limitation of a straight line:</b> in \(Pay=\beta_0+\beta_1Age+u\), β₁ is the change in average pay for one more year of age, the same at every age. Going from 25 to 26 surely isn't the same as going from 59 to 60. The data show a steep rise early in a career, a flat stretch, then a decline.</p>
+    \[Pay_i=\beta_0+\beta_1Age_i+\beta_2Age_i^2+u_i\]
+    <p>Don't be intimidated by the square: it's a multiple regression with \(X_1=Age\) and \(X_2=Age^2\). OLS, SEs and t-tests all work.</p>
+<pre><code>. generate age2 = age^2
+. regress pay age age2, robust                      n = 5,000   R² = 0.0175
+-------------+----------------------------------------------------------------
+         age |   335.1926   46.12015    7.27   0.000     244.7769    425.6084
+        age2 |  -3.683237   .5856826   -6.29   0.000    -4.831432   -2.535042
+       _cons |   -3470.86   856.1792   -4.05   0.000    -5149.346   -1792.373</code></pre>
+    <details><summary>Slide question: how would you test whether the relationship between pay and age is a straight line, against the alternative that it is quadratic?</summary><div class="body"><div class="ans"><p>The line is straight exactly when the squared term doesn't matter: test <b>H₀: β₂ = 0</b> vs. H₁: β₂ ≠ 0 with the t-test on age2. t = −6.29, p ≈ 0: <b>reject</b> the straight line. The negative sign says the curve bends downward (an inverted U).</p></div></div></details>
+    <p><b>The effect of one more year now depends on age:</b></p>
+    \[\Delta\widehat{Pay}=\big[\hat\beta_0+\hat\beta_1(a+1)+\hat\beta_2(a+1)^2\big]-\big[\hat\beta_0+\hat\beta_1a+\hat\beta_2a^2\big]=\hat\beta_1+\hat\beta_2(2a+1)\]
+    <details><summary>Slide question: what is the change in predicted pay from 25 to 26? From 45 to 46?</summary><div class="body"><div class="ans">
+      <p><b>25 → 26:</b> 335.19 − 3.683 × 51 = 335.19 − 187.85 = <b>+R$147</b> a month.</p>
+      <p><b>45 → 46:</b> 335.19 − 3.683 × 91 = 335.19 − 335.17 = <b>≈ R$0</b>.</p>
+      <p>Pay rises quickly early in a career and has flattened out by the mid-40s. The peak is at −β̂₁/(2β̂₂) ≈ 45.5 years; after that predicted pay falls (59 → 60: about −R$103).</p>
+      <p>How to compute it safely on an exam: predict Ŷ at both ages and subtract.</p></div></div></details>
+    <p><b>Higher-order polynomials:</b> \(Y=\beta_0+\beta_1X+\beta_2X^2+\cdots+\beta_rX^r+u\). A degree-r polynomial can bend up to r − 1 times. More flexible, but each power is one more regressor, which can raise the standard errors. No general rule: plot the data, use intuition and theory.</p>
+    <div class="plain"><p class="ph">In plain words: a good order of work</p><p>(1) Start with the simplest model: linear, no interactions. (2) Test for nonlinearity if theory suggests it (add X², test its coefficient). (3) Add heterogeneous effects if needed: does the effect of X differ by gender, schooling or income? Use levels for schooling, age, experience; logs for asset prices, GDP, sales; either for income, population, firm size.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 5 · Put it together: sleep and exam scores</p>
+    <p>Start from \(Score_i=\beta_0+\beta_1Sleep_i+u_i\).</p>
+    <details><summary>Slide question (1): would a 9th hour of sleep help as much as a 5th? Write a model that allows this. What signs do you expect?</summary><div class="body"><div class="ans"><p>Add a square: \(Score_i=\beta_0+\beta_1Sleep_i+\beta_2Sleep_i^2+u_i\). Expect <b>β₁ &gt; 0</b> (more sleep helps) and <b>β₂ &lt; 0</b> (diminishing returns): the 5th hour helps a lot, the 9th little or not at all.</p></div></div></details>
+    <details><summary>Slide question (2): could sleep matter less for students who drink coffee? Write a model that allows this (Coffee = 1 for coffee drinkers). Which coefficient answers the question?</summary><div class="body"><div class="ans"><p>Interact: \(Score_i=\beta_0+\beta_1Sleep_i+\beta_2Coffee_i+\beta_3(Sleep_i\times Coffee_i)+u_i\). The slope of sleep is β₁ for non-coffee drinkers and β₁ + β₃ for coffee drinkers, so <b>β₃</b> answers it. "Sleep matters less with coffee" means β₃ &lt; 0.</p></div></div></details>
+    <details><summary>Slide question (3): how would you test each idea?</summary><div class="body"><div class="ans"><p>(1) t-test of H₀: β₂ = 0 on the squared term. (2) t-test of H₀: β₃ = 0 on the interaction. In both, reject at 5% if |t| &gt; 1.96. (And for a causal reading, worry about what's in u: students who sleep more may also study more.)</p></div></div></details>
+  </div>
+  </div>
+
+  <div class="mine"><p class="mh">What to remember</p><ul>
+    <li>With several regressors, a test on one coefficient is the same t-test as before; only the interpretation adds "holding the others fixed."</li>
+    <li>An interaction X × D lets the slope of X differ by group; its coefficient is the <b>difference in slopes</b>. With two dummies, it's the difference in gaps.</li>
+    <li>A quadratic lets the slope of X change with X: one more year moves pay by β̂₁ + β̂₂(2a + 1).</li>
+    <li>Interactions and polynomials are still linear in the parameters, so OLS and t-tests apply as before.</li>
+  </ul></div>
+  <h3>Concept checks</h3>
+  <details><summary>In Y = β₀ + β₁X + β₂D + β₃(X×D), β₂ is large and negative. Does that mean group D = 1 does worse?</summary><div class="body"><div class="ans"><p>Not necessarily. β₂ is the gap at X = 0. The gap at any X is β₂ + β₃X; if β₃ &gt; 0 the D = 1 group can be ahead at every X in the data (like college at ages 25–45).</p></div></div></details>
+  <details><summary>A quadratic gives β̂₂ &gt; 0. What shape is the curve?</summary><div class="body"><div class="ans"><p>U-shaped (bends upward): the effect of X grows as X increases.</p></div></div></details>
+  <details><summary>Is Y = β₀ + β₁ ln(X) + u a linear regression?</summary><div class="body"><div class="ans"><p>Yes. It is linear in the parameters (it's not linear in X, but OLS doesn't need that). Same for X², interactions, and logs of Y.</p></div></div></details>
+  <details><summary>Two dummies, no interaction: what are you assuming?</summary><div class="body"><div class="ans"><p>That the gap from one dummy is the same at both values of the other (e.g. the old-young gap is the same with and without a degree). The interaction relaxes that.</p></div></div></details>
+  <details><summary>Why is the coefficient on <code>age</code> alone (335) not "the effect of one more year of age" in the quadratic model?</summary><div class="body"><div class="ans"><p>Because changing age also changes age². The effect is β̂₁ + β̂₂(2a + 1), which depends on the starting age a; 335 is only the slope near age 0, outside the data.</p></div></div></details>
+</section>
+
 <section class="block" id="ahead">
-  <p class="eyebrow">Lecture 12 onward · from Wed Oct 21 <span class="pill warn">Preview</span></p>
-  <h2>Still to come before the midterm</h2>
-  <p class="lede">Lecture 11 said next comes hypothesis tests with several regressors and nonlinear regressions (S&amp;W 7.1–7.4, 8.1, 8.3). This is a textbook-based preview; check it against the slides when they're posted.</p>
-  <h3>Tests with several regressors (S&amp;W ch. 7)</h3>
+  <p class="eyebrow">Lecture 13 · Mon Oct 26 <span class="pill warn">Preview</span></p>
+  <h2>Still to come: the F-test and midterm review</h2>
+  <p class="lede">Lecture 12 said the next class covers testing several coefficients at once, then midterm review problems on everything up to Lecture 12. This preview is from the textbook (S&amp;W 7.2–7.3); check it against the slides.</p>
   <ul>
-    <li><b>One coefficient at a time:</b> exactly as before, \(t=(\hat\beta_j-\beta_{j,0})/SE(\hat\beta_j)\), with robust SEs. Read it as "holding the other regressors fixed."</li>
-    <li><b>Several at once</b> (\(H_0:\beta_1=\beta_2=0\)): use the <b>F-statistic</b>, not two separate t-tests. Two t-tests at 5% each reject a true joint null more than 5% of the time, and they ignore the correlation between the estimates. With one restriction, F = t².</li>
-    <li>Concept to know: a variable can be individually insignificant but jointly significant with another when the two are highly correlated (imperfect multicollinearity).</li>
-  </ul>
-  <h3>Nonlinear regression (S&amp;W 8.1, 8.3)</h3>
-  <ul>
-    <li><b>Polynomials:</b> \(Y=\beta_0+\beta_1X+\beta_2X^2+u\). The effect of X depends on where you start. Compute the predicted Y at two X values and subtract. A negative \(\beta_2\) means the effect shrinks as X grows (diminishing returns).</li>
-    <li><b>Logs:</b> Lecture 8.</li>
-    <li><b>Interactions:</b> with two dummies, \(Y=\beta_0+\beta_1D_1+\beta_2D_2+\beta_3D_1D_2\), \(\beta_3\) is how much the effect of \(D_1\) changes when \(D_2=1\). With \(X\times D\), the two groups get different slopes. With \(X_1\times X_2\), the effect of \(X_1\) is \(\beta_1+\beta_3X_2\).</li>
-  </ul>
-  <h3>Assessing studies (S&amp;W ch. 9, if covered)</h3>
-  <ul>
-    <li><b>Internal validity threats:</b> omitted variables, wrong functional form, measurement error in X (biases the slope toward zero), sample selection, simultaneous causality (Y also causes X). Plus wrong SEs.</li>
-    <li><b>External validity:</b> differences in population and setting between the study and where you want to apply it.</li>
+    <li><b>Joint hypotheses:</b> H₀: β₁ = 0 <i>and</i> β₂ = 0 (e.g. "the college line is the same as the no-college line" in Lecture 12, or "all state dummies are zero").</li>
+    <li><b>Why not two t-tests?</b> Rejecting if <i>either</i> |t| &gt; 1.96 rejects a true joint null more than 5% of the time, and it ignores that the two estimates are correlated.</li>
+    <li><b>The F-statistic</b> tests all the restrictions at once. Stata: <code>test x1 x2</code> after <code>regress</code>; read "Prob &gt; F" like any p-value. In Lecture 12, <code>test college age_college</code> gave F = 202.5, p ≈ 0. With a single restriction, F = t².</li>
+    <li><b>The F at the top of regression output</b> tests that <i>all</i> slopes are zero.</li>
+    <li><b>Concept to know:</b> two highly correlated regressors (imperfect multicollinearity) can each be individually insignificant yet jointly significant: the data can tell that together they matter but not which one.</li>
   </ul>
 </section>
 <section class="block" id="ws">
