@@ -201,7 +201,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
     <label><input type="checkbox" id="s1"><span class="d">Wed Oct 21</span><span><span class="phase ph1">Notes</span> Lectures 1–4 (causality vs. association, probability, inference). Read each section here, then write your own one-page summary without looking. Do the concept checks. Go to lecture.</span></label>
     <label><input type="checkbox" id="s2"><span class="d">Thu Oct 22</span><span><span class="phase ph1">Notes</span> Lectures 5–8 (potential outcomes, selection bias, regression on a dummy, OLS, R² and logs). Fix the spots flagged in "Fix in your notes."</span></label>
     <label><input type="checkbox" id="s3"><span class="d">Fri Oct 23</span><span><span class="phase ph1">Notes</span> Lectures 9–11 plus Wednesday's lecture (properties of OLS, omitted variable bias, multiple regression). Then read "The one story" at the top and explain it out loud in five minutes.</span></label>
-    <label><input type="checkbox" id="s4"><span class="d">Sat Oct 24</span><span><span class="phase ph2">Practice sets</span> Worksheets 2, 3, 4 and 7 and the recitation problems, without peeking. Check against the worksheet solutions; redo anything you missed.</span></label>
+    <label><input type="checkbox" id="s4"><span class="d">Sat Oct 24</span><span><span class="phase ph2">Practice sets</span> Worksheets 2, 3, 4, 7 and 10 and the recitation problems, without peeking. Check against the worksheet solutions; redo anything you missed.</span></label>
     <label><input type="checkbox" id="s5"><span class="d">Sun Oct 25</span><span><span class="phase ph2">Practice sets</span> Redo PS1 and PS2 from a blank page. Use the problem-set guide to check you picked the right concept and formula for each question. List your three weakest topics.</span></label>
     <label><input type="checkbox" id="s6"><span class="d">Mon Oct 26</span><span><span class="phase ph3">Test</span> Review lecture (bring your weak-topic list). Evening: all concept checks and the True/False drill; for each miss, reread that lecture section.</span></label>
     <label><input type="checkbox" id="s7"><span class="d">Tue Oct 27</span><span><span class="phase ph3">Test</span> Practice midterm, timed at 75 minutes, closed notes. Grade it, redo every miss, reread the formula sheet. Stop early and sleep.</span></label>
@@ -1169,6 +1169,59 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
     <p>(b) E[u | D] = 0: Ivy Plus students would earn the same as other colleges' students had they gone to the same type of college. Implausible: Ivy Plus admits students with much higher SATs (1,548 vs. 1,183), richer families and better networks ⇒ positive selection bias, so $47,488 <b>overstates</b>.</p>
     <p>(c) 75.6: how much higher median earnings are, on average, per SAT point across all colleges. $47,488: how much higher Ivy Plus median earnings are than everyone else's.</p>
     <p>(d) Among applicants who are admitted to an Ivy Plus college (or on the margin of admission), randomly assign admission offers (a lottery for seats). Compare later earnings of lottery winners and losers; divide by the first stage (the share of winners who actually enroll) for the effect of attending. (Dale and Krueger's comparison of students admitted to similar schools, in Mastering 'Metrics ch. 2, is the observational version.)</p></div></div></details>
+
+  <h3>Worksheet 10 · Omitted variable bias</h3>
+  <p class="small">Goes with <a href="#l10">Lecture 10</a>. Key tools: the two-arrow test, bias = β₂ × cov(X, W)/var(X), and the identity short slope = long slope + β̂₂ × (slope of W on X).</p>
+  <details><summary>P1. The error and the selection bias (job training, six workers)</summary><div class="body"><div class="ans">
+    <p>(a) E[Y₀] = (20 + 24 + 28 + 30 + 34 + 38)/6 = <b>29</b>. Trainees get Y₀ + 3; the others get Y₀.</p>
+    <div class="tw"><table><tr><th>Worker</th><th class="num">D</th><th class="num">Y₀</th><th class="num">Y observed</th><th class="num">u = Y₀ − 29</th></tr>
+    <tr><td>Ana</td><td class="num">1</td><td class="num">20</td><td class="num">23</td><td class="num">−9</td></tr>
+    <tr><td>Ben</td><td class="num">1</td><td class="num">24</td><td class="num">27</td><td class="num">−5</td></tr>
+    <tr><td>Cy</td><td class="num">1</td><td class="num">28</td><td class="num">31</td><td class="num">−1</td></tr>
+    <tr><td>Dee</td><td class="num">0</td><td class="num">30</td><td class="num">30</td><td class="num">1</td></tr>
+    <tr><td>Eli</td><td class="num">0</td><td class="num">34</td><td class="num">34</td><td class="num">5</td></tr>
+    <tr><td>Fay</td><td class="num">0</td><td class="num">38</td><td class="num">38</td><td class="num">9</td></tr></table></div>
+    <p>(b) Trainees average (23 + 27 + 31)/3 = 27; non-trainees 34. Difference = <b>−7</b>, and a regression of Y on D gives β̂₁ = −7.</p>
+    <p>(c) E[u | D = 1] = (−9 − 5 − 1)/3 = <b>−5</b>; E[u | D = 0] = <b>+5</b>. Not zero, so E[u | D] = 0 fails.</p>
+    <p>(d) β₁ + E[u | D=1] − E[u | D=0] = 3 + (−5 − 5) = −7 ✓. Selection bias = E[Y₀ | D=1] − E[Y₀ | D=0] = 24 − 34 = −10, the same as the gap in u ✓.</p>
+    <p>(e) The trainees would have earned $10,000 less than the others even without the program, and the program's +$3,000 isn't enough to close that gap, so trainees still look $7,000 worse. Workers with weak job prospects (recently laid off, fewer skills) are the ones who sign up for training, so selection bias is negative.</p></div></div></details>
+
+  <details><summary>P2. Heart attacks and age (reperfusion)</summary><div class="body"><div class="ans">
+    <p>(a) Patients who got reperfusion within 12 hours survived <b>190 days longer</b> on average than those who didn't (robust SE 3.1, CI 184 to 196). That is an association; it is not yet a causal effect.</p>
+    <p>(b) Diagram: age → survival, age → reperfusion, reperfusion → survival. Arrow W → Y: in the long regression each extra year of age goes with 17.8 fewer days of survival (t = −105.7). Arrow W → X: treated patients are younger, 73.5 vs. 77.4 years.</p>
+    <p>(c) β₂ &lt; 0 (older patients die sooner); cov(reperfusion, age) &lt; 0 (treated are younger). Bias = (−)(−) = <b>positive</b>: leaving age out biases the first coefficient <b>upward</b>.</p>
+    <p>(d) Slope of age on reperf12 = 73.463 − 77.384 = <b>−3.920</b>. Check: 120.300 + (−17.834)(−3.920) = 120.300 + 69.915 = <b>190.215</b> ✓, the short slope.</p>
+    <p>(e) It <b>overstates</b> the benefit: 190 days vs. 120 holding age fixed. If the true effect were negative, the same upward bias would push the estimate toward zero or above, so it would <b>understate</b> how harmful the treatment is, and could even make a harmful treatment look helpful.</p>
+    <p>(f) Severity of the heart attack and other illnesses. Frail or very sick patients are less likely to be good candidates for reperfusion (cov &lt; 0) and survive less (β₂ &lt; 0) ⇒ still upward bias. Another: distance to a hospital that can do it (rural patients get less reperfusion and have worse care overall), also upward.</p></div></div></details>
+
+  <details><summary>P3. Public colleges and SAT scores</summary><div class="body"><div class="ans">
+    <p>(a) −6,714 is mean median earnings at public colleges minus private nonprofit ones ($55,659 vs. $62,373). Not causal: the two kinds of college enroll different students.</p>
+    <p>(b) Diagram: SAT → earnings and SAT ↔ public. W → Y: holding public fixed, one more SAT point goes with $75 more (β₂ = 75.0 &gt; 0). W → X: public colleges average 80 fewer SAT points (cov(public, SAT) &lt; 0). Bias = (+)(−) = <b>negative</b>: −6,714 is too negative.</p>
+    <p>(c) −693.18 + 74.997 × (−80.281) = −693.18 − 6,020.81 = <b>−6,713.99</b> ✓.</p>
+    <p>(d) Comparing colleges with the same average SAT, public colleges' median earnings are $693 lower, but the 95% CI [−$1,930, $544] includes 0: <b>no significant difference</b> once SAT is held fixed. SAT accounts for 6,021 of the 6,714, about <b>90%</b> of the raw gap.</p>
+    <p>(e) Not necessarily. Still in u: location (public colleges are more often outside high-wage metros), the mix of majors, and family background beyond what SAT captures. Any of these that differs between public and private colleges at the same SAT still biases −693.</p></div></div></details>
+
+  <details><summary>P4. Draw the bias (worked example)</summary><div class="body"><div class="ans">
+    <p>(a) Y = strikeouts per 7 innings, X = a pitcher's average pitch speed (mph). Model: \(K_i=\beta_0+\beta_1Speed_i+u_i\), with β₁ &gt; 0 expected.</p>
+    <p>(c) W = <b>spin rate</b> (how much the ball moves). It raises strikeouts (W → Y) and pitchers who throw harder also tend to generate more spin (W moves with X). Diagram: spin → strikeouts, spin ↔ speed, speed → strikeouts.</p>
+    <p>(d) \(\hat\beta_1^{short}\xrightarrow{p}\beta_1+\beta_2\frac{\mathrm{cov}(Speed,Spin)}{\mathrm{var}(Speed)}\) with β₂ &gt; 0 and cov &gt; 0 ⇒ <b>upward bias</b>: speed gets credit for some of what spin does.</p>
+    <p>(b, e) The short-regression line is steeper than the true line:</p>
+    <svg viewBox="0 0 320 200" width="320" height="200" role="img" aria-label="Two lines: the short regression line is steeper than the true line" style="max-width:100%;height:auto">
+      <line x1="40" y1="170" x2="300" y2="170" stroke="var(--muted)" stroke-width="1.5"/>
+      <line x1="40" y1="170" x2="40" y2="15" stroke="var(--muted)" stroke-width="1.5"/>
+      <text x="300" y="190" text-anchor="end" font-size="12" fill="var(--muted)">X = pitch speed</text>
+      <text x="46" y="18" font-size="12" fill="var(--muted)">Y = strikeouts</text>
+      <line x1="60" y1="140" x2="290" y2="95" stroke="var(--accent)" stroke-width="2.5"/>
+      <text x="292" y="124" text-anchor="end" font-size="12" fill="var(--accent)">true line (β₁)</text>
+      <line x1="60" y1="160" x2="290" y2="35" stroke="var(--fixc)" stroke-width="2.5" stroke-dasharray="6 4"/>
+      <text x="280" y="30" text-anchor="end" font-size="12" fill="var(--fixc)">short regression</text>
+    </svg></div></div></details>
+
+  <details><summary>P5. Overstated or understated?</summary><div class="body"><div class="ans">
+    <p>(a) X = police per resident, Y = crime, W = the crime a city would have anyway. β₂ &gt; 0, cov &gt; 0 (high-crime cities hire more police) ⇒ <b>upward</b> bias. The true effect of police is probably negative, so the estimate is pushed toward zero or above it: it <b>understates</b> how much police reduce crime (here it even flips the sign).</p>
+    <p>(b) X = fertilizer per acre, Y = yield, W = soil quality. β₂ &gt; 0; cov &lt; 0 (farmers on poor soil use more fertilizer) ⇒ <b>downward</b> bias. The true effect is positive, so "only slightly higher" <b>understates</b> fertilizer's effect.</p>
+    <p>(c) X = hours of TV, Y = grades, W = parental supervision of homework. β₂ &gt; 0; cov &lt; 0 (supervised children watch less TV) ⇒ <b>downward</b> bias. If TV's true effect is negative, the estimate is too negative: it <b>overstates</b> the harm.</p>
+    <div class="tip"><p>"Overstated or understated" is about size, so compare the bias with the sign of the true effect. Upward bias on a positive effect overstates it; upward bias on a negative effect understates it.</p></div></div></div></details>
 </section>
 
 <section class="block" id="rec">
