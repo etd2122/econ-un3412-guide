@@ -203,7 +203,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
     <label><input type="checkbox" id="s1"><span class="d">Wed Oct 21</span><span><span class="phase ph1">Notes</span> Lectures 1–4 (causality vs. association, probability, inference). Read each section here, then write your own one-page summary without looking. Do the concept checks. Go to lecture.</span></label>
     <label><input type="checkbox" id="s2"><span class="d">Thu Oct 22</span><span><span class="phase ph1">Notes</span> Lectures 5–8 (potential outcomes, selection bias, regression on a dummy, OLS, R² and logs). Fix the spots flagged in "Fix in your notes."</span></label>
     <label><input type="checkbox" id="s3"><span class="d">Fri Oct 23</span><span><span class="phase ph1">Notes</span> Lectures 9–12 (properties of OLS, omitted variable bias, multiple regression, interactions and polynomials). Then read "The one story" at the top and explain it out loud in five minutes.</span></label>
-    <label><input type="checkbox" id="s4"><span class="d">Sat Oct 24</span><span><span class="phase ph2">Practice sets</span> Worksheets 2, 3, 4, 7 and 10 and the recitation problems, without peeking. Check against the worksheet solutions; redo anything you missed.</span></label>
+    <label><input type="checkbox" id="s4"><span class="d">Sat Oct 24</span><span><span class="phase ph2">Practice sets</span> Worksheets 2, 3, 4, 7, 10 and 11 and the recitation problems, without peeking. Check against the worksheet solutions; redo anything you missed.</span></label>
     <label><input type="checkbox" id="s5"><span class="d">Sun Oct 25</span><span><span class="phase ph2">Practice sets</span> Redo PS1 and PS2 from a blank page. Use the problem-set guide to check you picked the right concept and formula for each question. List your three weakest topics.</span></label>
     <label><input type="checkbox" id="s6"><span class="d">Mon Oct 26</span><span><span class="phase ph3">Test</span> Review lecture (bring your weak-topic list). Evening: all concept checks and the True/False drill; for each miss, reread that lecture section.</span></label>
     <label><input type="checkbox" id="s7"><span class="d">Tue Oct 27</span><span><span class="phase ph3">Test</span> Practice midterm, timed at 75 minutes, closed notes. Grade it, redo every miss, reread the formula sheet. Stop early and sleep.</span></label>
@@ -1348,6 +1348,37 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
     <p>(b) X = fertilizer per acre, Y = yield, W = soil quality. β₂ &gt; 0; cov &lt; 0 (farmers on poor soil use more fertilizer) ⇒ <b>downward</b> bias. The true effect is positive, so "only slightly higher" <b>understates</b> fertilizer's effect.</p>
     <p>(c) X = hours of TV, Y = grades, W = parental supervision of homework. β₂ &gt; 0; cov &lt; 0 (supervised children watch less TV) ⇒ <b>downward</b> bias. If TV's true effect is negative, the estimate is too negative: it <b>overstates</b> the harm.</p>
     <div class="tip"><p>"Overstated or understated" is about size, so compare the bias with the sign of the true effect. Upward bias on a positive effect overstates it; upward bias on a negative effect understates it.</p></div></div></div></details>
+
+  <h3>Worksheet 11 · Multiple regression</h3>
+  <p class="small">Goes with <a href="#l11">Lecture 11</a>. Key tools: reference categories, perfect multicollinearity, omitted variable bias, conditional mean independence.</p>
+  <details><summary>P1. Is Brasília a better place to work? (state dummies)</summary><div class="body"><div class="ans">
+    <p>(a) <b>Goiás</b> is left out of column (1) (no GO row; the intercept matches GO's average in column 3). Intercept 3,279: average monthly pay in Goiás is <b>R$3,279</b>. DF 1,566: jobs in the Distrito Federal pay <b>R$1,566 more</b> per month than jobs in Goiás, on average.</p>
+    <p>(b) The <b>Distrito Federal</b> is left out of column (2); the intercept, 4,845, is DF's average pay. GO −1,566: Goiás jobs pay R$1,566 less than DF jobs on average. Mato Grosso: column (1) 3,279 + 288 = <b>3,567</b>; column (2) 4,845 − 1,278 = <b>3,567</b>. Same answer because both columns are the same model with a different reference category: they give the same predicted average for every state, only the coefficients are measured from a different baseline.</p>
+    <p>(c) With all four dummies and no intercept, each coefficient is that state's <b>average pay</b>: DF R$4,845, GO R$3,279, MT R$3,567, MS R$3,269.</p>
+    <p>(d) Every job is in exactly one state, so DF + GO + MT + MS = 1 for everyone, which is exactly the intercept's hidden regressor X₀ = 1. That's perfect multicollinearity: OLS can't separate the intercept from the four dummies. Drop one dummy or drop the intercept.</p>
+    <p>(e) Column (1): MT = 288, SE 178, t = 288/178 = 1.62 &lt; 1.96 (p ≈ 0.11). <b>Not significantly different</b> from Goiás at 5%. To compare MT with MS, rerun with <b>MS (or MT) as the left-out category</b>, e.g. dummies for DF, GO and MT; then the t-test on MT is the MT vs. MS test. (From column (1) alone, 288 − (−10) = 298 is the gap, but its SE isn't shown.)</p>
+    <p>(f) It should <b>fall</b>. Schooling raises pay (β₂ &gt; 0) and DF workers have more of it (cov &gt; 0), so the short DF coefficient was biased upward. Rough size: 370 × (12.8 − 11.9) ≈ R$333.</p>
+    <p>(g) DF 1,244: comparing workers with the <b>same years of schooling</b>, DF jobs pay R$1,244 more a month than Goiás jobs. Schooling 370: in the <b>same state</b>, one more year of schooling goes with R$370 more monthly pay. (DF fell by 1,566 − 1,244 = 322, close to the predicted 333.)</p>
+    <p>(h) Columns (1) and (2) contain the same information (three dummies plus an intercept, just a different one left out), so they produce identical fitted values and residuals, hence the same R². Column (4) adds schooling, so R² rises from 0.031 to 0.120: schooling explains another 9% of the variation in pay. Adjusted R² is almost the same because n = 2,000 is huge relative to k: the penalty (n − 1)/(n − k − 1) = 1,999/1,994 ≈ 1.003.</p>
+    <p>(i) <b>No.</b> It compares different workers in different places, not the same worker moving. Still in u: the kind of jobs (Brasília is full of well-paid federal government jobs), cost of living, experience and ability, and who chooses to live in the capital. These differ between DF and Goiás and affect pay, so 1,244 is not the causal effect of moving.</p></div></div></details>
+
+  <details><summary>P2. Perfect multicollinearity, case by case</summary><div class="body"><div class="ans">
+    <p>(a) <b>Yes:</b> X₂ = X₁.</p>
+    <p>(b) <b>No:</b> age² is not a <i>linear</i> function of age (and X₀). The relationship is a curve.</p>
+    <p>(c) <b>Yes:</b> X₂ = 12 X₁.</p>
+    <p>(d) <b>Yes:</b> X₁ + X₂ = 1 = X₀, so X₂ = X₀ − X₁ (the dummy variable trap).</p>
+    <p>(e) <b>Yes:</b> X₁ = 100 X₂.</p>
+    <p>(f) <b>Yes:</b> X₂ = 4 X₀. A constant regressor duplicates the intercept.</p>
+    <p>(g) <b>Yes:</b> X₂ = X₁ + 100 X₀.</p>
+    <p>(h) <b>Yes,</b> if the one regressor doesn't vary in the sample, it's a multiple of X₀. Example: a dummy for "Columbia student" in a sample of only Columbia students (it's 1 for everyone, so X₁ = X₀). Then Σ(Xᵢ − X̄)² = 0 and the slope formula divides by zero.</p></div></div></details>
+
+  <details><summary>P3. Does taking econometrics raise your earnings?</summary><div class="body"><div class="ans">
+    <p>(a) \(Earnings_i=\beta_0+\beta_1Econometrics_i+u_i\).</p>
+    <p>(b) Unit of observation: a Columbia graduate. Earnings: e.g. annual earnings five years after graduation, in dollars. Econometrics: a dummy = 1 if the student took the course, 0 if not.</p>
+    <p>(c) β̂₁ is the difference in average earnings between graduates who took econometrics and those who didn't. E[u | Econometrics] = 0 means everything else that affects earnings (major, quantitative skill, ambition, family background, career plans) has the same average for students who did and didn't take the course. <b>Unlikely:</b> econ, finance and statistics students take it and go into higher-paying jobs.</p>
+    <p>(d) W = <b>quantitative ability</b>. It raises earnings (β₂ &gt; 0) and students with more of it are more likely to take econometrics (cov &gt; 0) ⇒ bias = (+)(+) = <b>upward</b>: β̂₁ overstates the payoff. (Major works the same way: econ/finance majors take it and earn more.)</p>
+    <p>(e) Add major dummies, GPA, SAT/math score, number of math courses, parents' income, gender, intended career. β₁ then means: the difference in earnings between students who took econometrics and those who didn't, <b>holding major, GPA, test scores, family income and career plans fixed</b>.</p>
+    <p>(f) \(E[u_i\mid Econometrics_i, Major_i, GPA_i, SAT_i,\dots]=E[u_i]\): among students with the same major, GPA, scores and background, whether they took econometrics is as good as random. Probably still not fully true: motivation, interest in data, and plans to work in finance or consulting are hard to measure, push students into the course, and raise earnings, so some upward bias likely remains.</p></div></div></details>
 </section>
 
 <section class="block" id="rec">
