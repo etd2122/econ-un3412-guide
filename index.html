@@ -167,6 +167,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
   </ul>
   <h4>Practice</h4>
   <ul>
+    <li><a href="#review">Review session (Oct 26)</a></li>
     <li><a href="#practice">Practice exam</a></li>
     <li><a href="#tf">True / False drill</a></li>
   </ul>
@@ -203,7 +204,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
     <label><input type="checkbox" id="s1"><span class="d">Wed Oct 21</span><span><span class="phase ph1">Notes</span> Lectures 1–4 (causality vs. association, probability, inference). Read each section here, then write your own one-page summary without looking. Do the concept checks. Go to lecture.</span></label>
     <label><input type="checkbox" id="s2"><span class="d">Thu Oct 22</span><span><span class="phase ph1">Notes</span> Lectures 5–8 (potential outcomes, selection bias, regression on a dummy, OLS, R² and logs). Fix the spots flagged in "Fix in your notes."</span></label>
     <label><input type="checkbox" id="s3"><span class="d">Fri Oct 23</span><span><span class="phase ph1">Notes</span> Lectures 9–12 (properties of OLS, omitted variable bias, multiple regression, interactions and polynomials). Then read "The one story" at the top and explain it out loud in five minutes.</span></label>
-    <label><input type="checkbox" id="s4"><span class="d">Sat Oct 24</span><span><span class="phase ph2">Practice sets</span> Worksheets 2, 3, 4, 7, 10 and 11 and the recitation problems, without peeking. Check against the worksheet solutions; redo anything you missed.</span></label>
+    <label><input type="checkbox" id="s4"><span class="d">Sat Oct 24</span><span><span class="phase ph2">Practice sets</span> Worksheets 2, 3, 4, 7, 9, 10 and 11 and the recitation problems, without peeking. Check against the worksheet solutions; redo anything you missed.</span></label>
     <label><input type="checkbox" id="s5"><span class="d">Sun Oct 25</span><span><span class="phase ph2">Practice sets</span> Redo PS1 and PS2 from a blank page. Use the problem-set guide to check you picked the right concept and formula for each question. List your three weakest topics.</span></label>
     <label><input type="checkbox" id="s6"><span class="d">Mon Oct 26</span><span><span class="phase ph3">Test</span> Review lecture (bring your weak-topic list). Evening: all concept checks and the True/False drill; for each miss, reread that lecture section.</span></label>
     <label><input type="checkbox" id="s7"><span class="d">Tue Oct 27</span><span><span class="phase ph3">Test</span> Practice midterm, timed at 75 minutes, closed notes. Grade it, redo every miss, reread the formula sheet. Stop early and sleep.</span></label>
@@ -1296,6 +1297,44 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
     <p>(c) 75.6: how much higher median earnings are, on average, per SAT point across all colleges. $47,488: how much higher Ivy Plus median earnings are than everyone else's.</p>
     <p>(d) Among applicants who are admitted to an Ivy Plus college (or on the margin of admission), randomly assign admission offers (a lottery for seats). Compare later earnings of lottery winners and losers; divide by the first stage (the share of winners who actually enroll) for the effect of attending. (Dale and Krueger's comparison of students admitted to similar schools, in Mastering 'Metrics ch. 2, is the observational version.)</p></div></div></details>
 
+  <h3>Worksheet 9 · Properties of OLS and omitted variables <a href="worksheet-9-ols-properties.pdf" style="font-size:.7em;font-weight:400">(PDF)</a></h3>
+  <details><summary>P1. From the mean to the slope (fill in the table)</summary><div class="body"><div class="ans">
+    <p>Every row for the sample mean has a twin for the regression slope. The one real difference is the condition: for the mean we only need a random sample; for the slope we also need \(E[u_i\mid X_i]=0\).</p>
+    <div class="tw"><table><tr><th></th><th>Learning about a mean</th><th>Learning about a slope</th></tr>
+    <tr><td>Population parameter</td><td>\(\mu_Y\)</td><td>\(\beta_1\)</td></tr>
+    <tr><td>Estimator</td><td>\(\bar Y=\frac1n\sum Y_i\)</td><td>\(\hat\beta_1=\dfrac{\sum(X_i-\bar X)(Y_i-\bar Y)}{\sum(X_i-\bar X)^2}\)</td></tr>
+    <tr><td>Unbiased? When?</td><td>\(E[\bar Y]=\mu_Y\), random sample</td><td>\(E[\hat\beta_1]=\beta_1\), random sample <b>and</b> \(E[u_i\mid X_i]=0\)</td></tr>
+    <tr><td>Consistent? When?</td><td>\(\bar Y\xrightarrow{p}\mu_Y\), random sample</td><td>\(\hat\beta_1\xrightarrow{p}\beta_1\), same conditions (plus no huge outliers)</td></tr>
+    <tr><td>In large samples</td><td>\(\bar Y\approx N(\mu_Y,\sigma_Y^2/n)\)</td><td>\(\hat\beta_1\approx N\big(\beta_1,\ \sigma^2_{\hat\beta_1}\big)\) (CLT)</td></tr>
+    <tr><td>Standard error</td><td>\(s_Y/\sqrt n\)</td><td>\(SE(\hat\beta_1)\approx SER/(\sqrt n\, s_X)\) (robust SE in the output)</td></tr>
+    <tr><td>t-statistic</td><td>\((\bar Y-\mu_0)/SE(\bar Y)\)</td><td>\((\hat\beta_1-\beta_{1,0})/SE(\hat\beta_1)\)</td></tr>
+    <tr><td>p-value</td><td>\(2\Phi(-|t|)\)</td><td>\(2\Phi(-|t|)\)</td></tr>
+    <tr><td>95% CI</td><td>\(\bar Y\pm1.96\,SE(\bar Y)\)</td><td>\(\hat\beta_1\pm1.96\,SE(\hat\beta_1)\)</td></tr></table></div></div></div></details>
+  <details><summary>P2. True or false (a)–(f)</summary><div class="body"><div class="ans">
+    <p>(a) <b>False.</b> \(E[u\mid X]=0\) makes \(\hat\beta_1\) <i>unbiased</i>: right <i>on average</i> across samples. Any one sample's \(\hat\beta_1\) still misses \(\beta_1\) because of sampling noise.</p>
+    <p>(b) <b>False.</b> With \(\text{cov}(X,u)\neq0\), \(\hat\beta_1\) is inconsistent: it converges to \(\beta_1+\text{cov}(X,u)/\text{var}(X)\), not \(\beta_1\). Ten million observations pin down the <i>wrong</i> number very precisely.</p>
+    <p>(c) <b>False.</b> The SE measures only <i>sampling</i> variability (how much \(\hat\beta_1\) moves from sample to sample). It says nothing about bias from omitted variables.</p>
+    <p>(d) <b>True.</b> Smaller critical value: 1.645 vs. 1.96.</p>
+    <p>(e) <b>False.</b> 95% of intervals built this way contain \(\beta_1\); any particular one may miss.</p>
+    <p>(f) <b>False.</b> A new sample gives a new \(\hat\beta_1\) and a new SE, so a new interval. The interval is random; \(\beta_1\) is fixed.</p></div></div></details>
+  <details><summary>P3. What makes the standard error small?</summary><div class="body"><div class="ans">
+    <p>Use \(SE(\hat\beta_1)\approx \dfrac{SER}{\sqrt n\,s_X}\).</p>
+    <p>(a) n × 4 → \(\sqrt n\) × 2 → <b>SE halves</b>.</p>
+    <p>(b) \(s_X\) × 2 → <b>SE halves</b>. A wide range of X gives the line a long lever: the same up-and-down noise in Y matters less when the x values are far apart, so the slope is pinned down better. With X bunched together, small noise can swing the slope a lot.</p>
+    <p>(c) SER halves → <b>SE halves</b> (less scatter around the line).</p>
+    <p>(d) Compare \(\sqrt n\, s_X\): (A) \(\sqrt{400}\times2=40\); (B) \(\sqrt{100}\times6=60\). <b>Sample B</b> has the smaller SE: \(SE_B/SE_A=40/60=2/3\), i.e. about a third smaller (A's SE is 1.5× B's). Spread in X can beat sheer sample size.</p></div></div></details>
+  <details><summary>P4. Do older workers earn more? (Brazil, 5,000 jobs)</summary><div class="body"><div class="ans">
+    <p>(a) Slope −7.80: workers one year older earn on average <b>7.80 reais less per month</b>; over ten years of age, <b>about 78 reais less</b>. An association, not a causal effect.</p>
+    <p>(b) t = −0.94, p = 0.348 &gt; 0.05: <b>fail to reject</b> \(H_0:\beta_1=0\). No significant linear association between age and pay at 5%.</p>
+    <p>(c) Multiply the 95% CI by 10: <b>[−240.7, 84.8] reais per month</b> over ten years. It contains 0, consistent with (b).</p>
+    <p>(d) \(\beta_2\) (schooling's effect on pay, holding age fixed) <b>&gt; 0</b>. cov(age, educ) <b>&lt; 0</b> (older cohorts have less schooling). Bias = \(\beta_2\cdot\text{cov}/\text{var}\) = (+)(−) <b>&lt; 0</b>: \(\hat\beta_1\) is biased <b>downward</b>, making older workers look worse paid than they are.</p>
+    <p>(e) <b>Yes.</b> The age coefficient jumps from −7.80 to <b>+27.19</b>. Holding schooling fixed, workers one year older earn on average 27.19 reais more per month. t = 3.30, p = 0.001: reject \(\beta_1=0\) at 5% (and 1%).</p>
+    <p>(f) Short = long + \(\hat\beta_{\text{educ}}\times\)(slope of educ on age):<br>\(27.19078+483.1861\times(-0.0724066)=27.19078-34.98587=\mathbf{-7.795}\), exactly the short-regression slope.</p></div></div></details>
+  <details><summary>P5. More data does not fix it (GPA and part-time work)</summary><div class="body"><div class="ans">
+    <p>(a) \(\hat\beta_1\xrightarrow{p}\beta_1+\beta_2\cdot\frac{\text{cov}(X,W)}{\text{var}(X)}=-0.01+0.02\times(-0.5)=\mathbf{-0.02}\). It <b>overstates the harm</b> of working: twice the true effect. Hours partly proxy for low family income.</p>
+    <p>(b) Both are centered on <b>−0.02</b> (same bias). The 100,000-student estimate is far <b>less spread out</b> (SE about \(\sqrt{1000}\approx32\) times smaller). Only the spread differs, not the center.</p>
+    <p>(c) <b>Right:</b> the estimate is precise; with SE 0.001 it is very close to where OLS converges. <b>Wrong:</b> "each hour lowers GPA by 0.02" is a causal claim, but the estimate is biased; the true effect is −0.01 and half of −0.02 comes from omitted family income. Precision is not accuracy: a big sample shrinks the SE, not omitted variable bias.</p></div></div></details>
+
   <h3>Worksheet 10 · Omitted variable bias</h3>
   <p class="small">Goes with <a href="#l10">Lecture 10</a>. Key tools: the two-arrow test, bias = β₂ × cov(X, W)/var(X), and the identity short slope = long slope + β̂₂ × (slope of W on X).</p>
   <details><summary>P1. The error and the selection bias (job training, six workers)</summary><div class="body"><div class="ans">
@@ -1453,6 +1492,113 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
   <tr><td>8. Log models</td><td>Identify linear-log, log-linear, log-log and read β₁</td><td><a href="#l8">L8</a></td><td>1% → \(0.01\beta_1\) units; 1 unit → \(100\beta_1\)%; 1% → \(\beta_1\)%</td></tr>
   </table></div>
   <div class="tip"><p>For any "interpret" question, use this sentence: "<i>Units</i> with one more <i>unit of X</i> have, on average, <i>β̂₁ units of Y</i> more." Then add whether it is causal and why (is E[u | X] = 0 plausible?).</p></div>
+</section>
+
+<section class="block" id="review">
+  <p class="eyebrow">Practice · in-class review, Mon Oct 26</p>
+  <h2>Midterm review session: worked answers</h2>
+  <p class="lede">The review packet's questions (<a href="review-session-oct26.pdf">original PDF</a>) in the midterm's format: 11 short questions and one long question. Key numbers from each Stata/R output are restated so you can work from this page. Try each one first; answers are folded.</p>
+  <div class="toolbar"><button type="button" data-open="review">Open all answers</button><button type="button" data-close="review">Close all</button></div>
+
+  <h3>Short questions</h3>
+
+  <p class="q">(1) Career coaching. Analyst 1: lottery among 1,000 applicants for 500 slots, gap = $3,000. Analyst 2: coached vs. never-applied, gap = $9,000. (a) Which is compelling, and why not the other (use \(E[Y_{0i}\mid D_i=1]\), \(E[Y_{0i}\mid D_i=0]\))? (b) Constant effect, analyst 1 exactly right: size and sign of analyst 2's selection bias?</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>Always: \(E[Y_i\mid D_i=1]-E[Y_i\mid D_i=0]=\underbrace{E[Y_{1i}-Y_{0i}\mid D_i=1]}_{\text{effect on the coached}}+\underbrace{E[Y_{0i}\mid D_i=1]-E[Y_{0i}\mid D_i=0]}_{\text{selection bias}}\).</p>
+    <p>(a) <b>Analyst 1.</b> The lottery makes coaching independent of potential outcomes, so \(E[Y_{0i}\mid D_i=1]=E[Y_{0i}\mid D_i=0]\): winners and losers would have earned the same without coaching, and selection bias is 0. Analyst 2 compares students who <i>chose</i> coaching with students who never applied; they differ in ways that affect salary even without coaching, so \(E[Y_{0i}\mid D_i=1]\neq E[Y_{0i}\mid D_i=0]\).</p>
+    <p>(b) Selection bias = 9,000 − 3,000 = <b>$6,000</b>. Positive because students who seek coaching are more motivated, career-focused or better connected, and would earn more even without it.</p></div></div></details>
+
+  <p class="q">(2) Study groups: \(GPA_i=\beta_0+\beta_1D_i+u_i\), constant effect. (a) \(\beta_0,\beta_1,u_i\) in potential outcomes? (b) Assumption on \(u_i\) for unbiasedness, and in potential-outcomes language? (c) \(\hat\beta_1=0.30\) in a huge sample, \(E[u\mid D=1]=0.15\), \(E[u\mid D=0]=-0.05\). \(\beta_1\)?</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) \(Y_i=Y_{0i}+D_i(Y_{1i}-Y_{0i})\), so \(\beta_0=E[Y_{0i}]\), \(\beta_1=Y_{1i}-Y_{0i}\) (the same for everyone), \(u_i=Y_{0i}-E[Y_{0i}]\).</p>
+    <p>(b) \(E[u_i\mid D_i]=0\). In potential outcomes: \(E[Y_{0i}\mid D_i=1]=E[Y_{0i}\mid D_i=0]\), no selection bias. They're the same statement because \(u_i\) <i>is</i> \(Y_{0i}\) minus a constant: saying u's average doesn't depend on D says joiners and non-joiners would have had the same average GPA without a study group.</p>
+    <p>(c) \(\hat\beta_1\to\beta_1+E[u\mid D=1]-E[u\mid D=0]=\beta_1+0.20\), so \(\beta_1=0.30-0.20=\mathbf{0.10}\). The regression <b>overstates</b> the effect.</p></div></div></details>
+
+  <p class="q">(3) College Scorecard, 988 colleges. (i) earnings on public: −6,714 (SE 918), cons 62,373. (ii) earnings on public + sat: public −693 (SE 630, p = 0.27), sat 75.00. (iii) sat on public: −80.28. (a) Interpret public in (i). (b) OVB in (i)? Sign of corr(public, sat)? (c) Compute the OVB and reconcile. (d) Interpret public in (ii).</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) Graduates of public colleges have median earnings on average <b>$6,714 lower</b> than graduates of private nonprofits ($55,659 vs. $62,373); t = −7.32, highly significant. An association.</p>
+    <p>(b) <b>Yes.</b> SAT affects earnings (75 per point) and is related to public; adding it moves the coefficient from −6,714 to −693. Correlation is <b>negative</b>: public colleges average 80 fewer SAT points.</p>
+    <p>(c) Bias = \(\hat\beta_{sat}\times\hat\delta=75.00\times(-80.28)=\mathbf{-6{,}021}\). Long + bias = −693 + (−6,021) = <b>−6,714</b> = the short coefficient. Almost all of the raw public–private gap is about SAT.</p>
+    <p>(d) Holding average SAT fixed, public colleges' graduates earn on average <b>$693 less</b>, not statistically significant (t = −1.10, p = 0.27). Among colleges with similar SATs, no detectable public–private gap.</p></div></div></details>
+
+  <p class="q">(4) Mentoring: 300 of 600 first-years drawn at random. sat on mentor: −2 (SE 5.23, p = 0.70). mentor on sat: −0.000122 (p = 0.70). gpa on mentor: 0.1057 (SE 0.0268), cons 3.359. gpa on mentor + sat: mentor 0.1095 (SE 0.0249), sat 0.00194. (a) \(\beta_0,\beta_1\) in potential outcomes; why does the draw give \(E[u\mid mentor]=0\)? (b) What does sat on mentor check? (c) Interpret mentor on sat. (d) Interpret and test gpa on mentor. Causal? (e) Why does adding sat barely move the coefficient but shrink the SE? (f) Voluntary mentoring gives +0.30: why too big?</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) \(\beta_0=E[Y_{0i}]\) (average GPA without a mentor), \(\beta_1=E[Y_{1i}-Y_{0i}]\) (the average effect of a mentor). The random draw makes mentor independent of everything about the student, so mentored and unmentored students have the same average \(Y_0\): \(E[u\mid mentor]=0\).</p>
+    <p>(b) A <b>balance check</b>: are the groups alike on a pre-college characteristic? The difference is −2 SAT points, t = −0.38, p = 0.70. No significant difference, so the randomization looks fine.</p>
+    <p>(c) Students with 100 more SAT points are about 1.2 percentage points less likely to have a mentor (−0.000122 × 100), not significant (p = 0.70). SAT does <b>not</b> affect who gets a mentor, as expected, since a lottery decided. It's the same balance check (same t and p as (b)).</p>
+    <p>(d) Mentored students' GPA is on average <b>0.106 points higher</b> (3.465 vs. 3.359). t = 0.1057/0.0268 = 3.94 &gt; 1.96: reject "no effect" at 5%. <b>Yes, causal</b>: random assignment makes \(E[u\mid mentor]=0\), so this estimates the average effect.</p>
+    <p>(e) <b>Coefficient barely moves</b> because sat is unrelated to mentor (randomization), so omitting it caused no bias: bias = \(\beta_{sat}\times\approx0\). <b>SE falls</b> because sat explains a lot of GPA (R² 0.025 → 0.164, Root MSE 0.329 → 0.305). Less unexplained noise means a more precise estimate.</p>
+    <p>(f) <b>Positive selection bias.</b> Students who sign up are likely more motivated or organized and would have higher GPAs anyway: \(E[Y_0\mid D=1]&gt;E[Y_0\mid D=0]\). So 0.30 overstates the effect (the lottery says about 0.11).</p></div></div></details>
+
+  <p class="q">(5) Logs, 988 colleges. lnearnings on admrate: −0.4536. earnings on lnundergrads: 2,745.7. lnearnings on lnundergrads: 0.0496. (a) Interpret admrate; gap between 20% and 60% admit rates? (b) Interpret lnundergrads in the 2nd and 3rd. (c) "Growing enrollment 10% raises earnings ~5%": two problems.</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) Log-level: a college whose admit rate is 1 (100 points) higher has earnings about 45% lower; per 10 percentage points, about <b>4.5% lower</b>. From 20% to 60%: 0.40 × (−0.4536) = −0.181, so earnings about <b>18% lower</b> at the 60% college (exactly \(e^{-0.181}-1\approx-17\%\)).</p>
+    <p>(b) Level-log: 1% more undergrads ↔ earnings higher by 2,745.7/100 ≈ <b>$27</b> (10% ↔ about $275). Log-log: an elasticity, so 1% more undergrads ↔ about <b>0.05% higher</b> earnings.</p>
+    <p>(c) (1) <b>Arithmetic:</b> 10% × 0.0496 ≈ <b>0.5%</b>, not 5%. (2) <b>Causality:</b> this compares different colleges at one time; bigger colleges differ in other ways (flagship status, resources, majors), so there is omitted variable bias, and it says nothing about what happens when one college grows.</p></div></div></details>
+
+  <p class="q">(6) Interaction: earnings on public (11,186), sat100 (7,801), public_sat (−1,021, p = 0.049), cons −32,817. (a) Lines for private and public. (b) Interpret sat100 and public_sat. (c) Is the payoff to 100 SAT points different at 5%? (d) Interpret public.</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) Private (public = 0): \(\widehat{earnings}=-32{,}817+7{,}801\,sat100\). Public: \((-32{,}817+11{,}186)+(7{,}801-1{,}021)sat100=-21{,}632+6{,}780\,sat100\).</p>
+    <p>(b) sat100: at <b>private</b> colleges, 100 more average SAT points ↔ $7,801 higher median earnings. public_sat: at public colleges that payoff is <b>$1,021 smaller</b> (so $6,780 per 100 points).</p>
+    <p>(c) Test public_sat = 0: t = −1.97, p = 0.049 &lt; 0.05. <b>Reject</b>, barely: the payoff differs at 5%.</p>
+    <p>(d) public = the public-minus-private gap when sat100 = 0, i.e. an average SAT of 0. <b>Not meaningful on its own</b> (far outside the data). At a realistic SAT, e.g. 1,200 (sat100 = 12): 11,186 − 1,021 × 12 ≈ <b>−$1,064</b>.</p></div></div></details>
+
+  <p class="q">(7) Internship premium \(\hat\beta_1=8{,}000\). Omitted GPA: +$5,000 per point holding internships fixed; mean GPA 3.6 (interns) vs. 3.3. (a) Bias? (b) Coefficient with GPA included? (c) "So the causal effect is $6,500": agree?</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) With a dummy X, cov/var = difference in mean W: 3.6 − 3.3 = 0.3. Bias = 5,000 × 0.3 = <b>+$1,500</b>.</p>
+    <p>(b) 8,000 − 1,500 = <b>$6,500</b>.</p>
+    <p>(c) <b>Not necessarily.</b> $6,500 removes the bias from GPA only. Other omitted factors (motivation, connections, major, family background) are likely still positively related to both internships and salary, so $6,500 is causal only if nothing else is left in u that's correlated with Intern. Probably still an overstatement.</p></div></div></details>
+
+  <p class="q">(8) Same $8,000 gap, potential outcomes. (a) Decompose. (b) Sign of selection bias; overstate or understate?</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) \(E[Y_i\mid D_i=1]-E[Y_i\mid D_i=0]=E[Y_{1i}-Y_{0i}\mid D_i=1]+\big(E[Y_{0i}\mid D_i=1]-E[Y_{0i}\mid D_i=0]\big)\): the effect on interns plus selection bias.</p>
+    <p>(b) <b>Positive</b>: students who land internships tend to have higher GPAs, more drive and better networks, so they'd earn more even without one. $8,000 <b>overstates</b> the effect.</p></div></div></details>
+
+  <p class="q">(9) \(\widehat{\ln(pay)}=7.21+0.063\,educ\) (Brazil). (a) Slope? (b) 12 vs. 16 years? (c) Why ln(pay)?</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) Each extra year of schooling ↔ about <b>6.3% higher</b> pay on average.</p>
+    <p>(b) 4 × 0.063 = 0.252, so about <b>25% higher</b> (exactly \(e^{0.252}-1\approx29\%\)).</p>
+    <p>(c) Pay is right-skewed; percentage effects are more natural (a year of school plausibly raises pay proportionally) and comparable across pay levels; logs reduce the pull of very high earners.</p></div></div></details>
+
+  <p class="q">(10) 2024 data: pay on age and year of birth; Stata drops one. (a) Why? (b) Can one year of data give "the effect of age holding birth year fixed"?</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) <b>Perfect multicollinearity</b>: in 2024, age = 2024 − birth year exactly, so the two regressors carry the same information and OLS can't separate them.</p>
+    <p>(b) <b>No.</b> In a single year, everyone born in the same year has the same age, so you can't vary age while holding birth year fixed. You'd need data from several years.</p></div></div></details>
+
+  <p class="q">(11) True or false (earnings on SAT, 988 colleges, \(\hat\beta_1=75.6\), SE 2.94). (a) Earnings are skewed, so no normal-based 95% CI. (b) In a randomized experiment with full compliance, the difference in means is unbiased for the average causal effect.</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>(a) <b>False.</b> The CLT applies to \(\hat\beta_1\) with n = 988: its sampling distribution is approximately normal even if earnings are skewed. CI = 75.6 ± 1.96(2.94) = [69.8, 81.4].</p>
+    <p>(b) <b>True.</b> Random assignment makes \(E[Y_0\mid D=1]=E[Y_0\mid D=0]\) (no selection bias), and with full compliance the difference in means is unbiased for the ATE.</p></div></div></details>
+
+  <h3>Long question: the gender gap (CPS 2015, 7,098 workers aged 25–34)</h3>
+  <p>lahe = ln(average hourly earnings). <b>A:</b> lahe on female: −0.1126 (SE 0.0127), cons 2.960. <b>B:</b> bachelor on female: 0.1506, cons 0.463. <b>C:</b> lahe on female + bachelor: female −0.1822 (SE 0.0116), bachelor 0.4620, cons 2.746. <b>D:</b> adds female_bach: female −0.1893, bachelor 0.4568, female_bach 0.0129 (SE 0.0231, p = 0.575).</p>
+
+  <p class="q">(12) Panel A: interpret female and the constant.</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>female: women earn on average about <b>11.3% less per hour</b> than men (exactly \(e^{-0.1126}-1\approx-10.7\%\)). Constant: average log hourly earnings of <b>men</b>, 2.96 (about \(e^{2.96}\approx\$19.3\)/hour).</p></div></div></details>
+
+  <p class="q">(13) Panel A: test "no gap" at 5%; then test "women earn 10% less."</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>\(H_0:\beta_1=0\): t = −8.87, |t| &gt; 1.96, so <b>reject</b>: there is a gender gap.</p>
+    <p>\(H_0:\beta_1=-0.10\): t = (−0.1126 + 0.10)/0.0127 = <b>−0.99</b>, |t| &lt; 1.96, so <b>fail to reject</b>. A 10% gap is consistent with the data (−0.10 is inside the CI [−0.138, −0.088]).</p></div></div></details>
+
+  <p class="q">(14) Panel B: interpret female. Predict how adding bachelor changes the female coefficient.</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>Women are <b>15.1 percentage points more likely</b> than men to have a bachelor's (61.4% vs. 46.3% in this sample).</p>
+    <p>Prediction: bachelor raises pay (\(\beta_2&gt;0\)) and is positively related to female, so the omitted variable bias in A is <b>positive</b>. It pushes the negative coefficient toward zero. Adding bachelor makes the female coefficient <b>larger in absolute value</b> (more negative).</p></div></div></details>
+
+  <p class="q">(15) Panel C: interpret female and bachelor; compute the OVB from B and C and reconcile with A.</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>female: holding education fixed, women earn about <b>18% less</b> per hour. bachelor: holding gender fixed, a bachelor's degree goes with about <b>46 log points</b> higher hourly pay (≈ 59%) than a high school diploma.</p>
+    <p>OVB = \(\hat\beta_{bach}\times\hat\delta=0.4620\times0.1506=\mathbf{0.0696}\). A = C + bias: −0.1822 + 0.0696 = <b>−0.1126</b> ✓. Women's higher education was hiding part of the gap.</p></div></div></details>
+
+  <p class="q">(16) Panel D: gap without a bachelor's; with one; is the difference significant at 5%?</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>Without a bachelor's: <b>−0.189</b> (about 19% less). With one: −0.189 + 0.013 = <b>−0.176</b> (about 18% less). The difference is the interaction, 0.013, with t = 0.56, p = 0.575: <b>not significant</b>. The gap is about the same for both education groups.</p></div></div></details>
+
+  <p class="q">(17) "Women are paid 18% less than men for the same work." One omitted variable and its direction.</p>
+  <details><summary>Answer</summary><div class="body"><div class="ans">
+    <p>The regression doesn't hold <b>the work</b> fixed. Example: <b>occupation/field</b> (or major, or hours). Higher-paying fields raise pay (+) and women are less likely to be in them (cov with female −), so the bias is (+)(−) = <b>negative</b>: the −18% <b>overstates</b> the gap for the same job. (Experience would work the same way if women have fewer years in the labor force.)</p></div></div></details>
 </section>
 
 <section class="block" id="practice">
