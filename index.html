@@ -119,6 +119,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
 .qz-f button{padding:4px 9px}
 .qz-f button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 .qz-sc{font-size:.9rem}
+.skip{display:inline-block;font:700 .7rem var(--f-body);letter-spacing:.04em;text-transform:uppercase;color:var(--fixc);border:1px solid var(--fixc);border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:middle}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
 .toolbar button{font:600 .82rem var(--f-body);background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:6px;padding:6px 12px;cursor:pointer}
 .toolbar button:hover{border-color:var(--accent)}
@@ -1118,7 +1119,7 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
       <p>Look at the <b>ms</b> row, because Goiás is the reference. Jobs in Mato Grosso do Sul pay R$256 more a month than in Goiás, for the same schooling and age. t = 2.38, p = 0.017: <b>yes at 5%</b> (and at 10%), but <b>not at 1%</b> (2.38 &lt; 2.576). The 95% CI [R$45, R$467] excludes 0 but is wide.</p></div></div></details>
   </div>
 
-  <div class="stop"><p class="sl">Stop 2 · When the effect depends on someone's group: two dummies</p>
+  <div class="stop"><p class="sl">Stop 2 · When the effect depends on someone's group: two dummies <span class="skip">Not on the midterm</span></p>
     <p>A picture from all 2.7 million Brazilian formal jobs: average pay rises with age much faster for college graduates than for workers without a degree. A regression with one slope for everyone can't show that.</p>
     <p>Effects that depend on another variable are everywhere: the effect of price on demand varies with income, advertising's effect on sales varies with competition, sleep's effect on test scores varies with caffeine. This matters for policy, because it tells you <b>who</b> a policy helps most.</p>
     <p>Start with two dummies: \(D_1=1\) if 35–45 ("old"), \(D_2=1\) if college degree.</p>
@@ -1144,7 +1145,7 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
       <p>Reading the rest: _cons 2,659 = average pay of young workers without a degree; college 2,066 = the degree premium among young workers.</p></div></div></details>
   </div>
 
-  <div class="stop"><p class="sl">Stop 3 · A dummy times a continuous variable: two lines</p>
+  <div class="stop"><p class="sl">Stop 3 · A dummy times a continuous variable: two lines <span class="skip">Not on the midterm</span></p>
     <p>Now age \(X\) is continuous and \(D=1\) for a college degree:</p>
     \[Pay_i=\beta_0+\beta_1X_i+\beta_2D_i+\beta_3(X_i\times D_i)+u_i\]
     <details><summary>Slide question: (1) What is the regression line (intercept and slope) for workers without a degree? With a degree? (2) Which term changes the intercept? Which changes the slope?</summary><div class="body"><div class="ans">
@@ -1561,7 +1562,7 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
     <p>(b) Level-log: 1% more undergrads ↔ earnings higher by 2,745.7/100 ≈ <b>$27</b> (10% ↔ about $275). Log-log: an elasticity, so 1% more undergrads ↔ about <b>0.05% higher</b> earnings.</p>
     <p>(c) (1) <b>Arithmetic:</b> 10% × 0.0496 ≈ <b>0.5%</b>, not 5%. (2) <b>Causality:</b> this compares different colleges at one time; bigger colleges differ in other ways (flagship status, resources, majors), so there is omitted variable bias, and it says nothing about what happens when one college grows.</p></div></div></details>
 
-  <p class="q">(6) Interaction: earnings on public (11,186), sat100 (7,801), public_sat (−1,021, p = 0.049), cons −32,817. (a) Lines for private and public. (b) Interpret sat100 and public_sat. (c) Is the payoff to 100 SAT points different at 5%? (d) Interpret public.</p>
+  <p class="q"><span class="skip">Not on the midterm</span> (6) Interaction: earnings on public (11,186), sat100 (7,801), public_sat (−1,021, p = 0.049), cons −32,817. (a) Lines for private and public. (b) Interpret sat100 and public_sat. (c) Is the payoff to 100 SAT points different at 5%? (d) Interpret public.</p>
   <details><summary>Answer</summary><div class="body"><div class="ans">
     <p>(a) Private (public = 0): \(\widehat{earnings}=-32{,}817+7{,}801\,sat100\). Public: \((-32{,}817+11{,}186)+(7{,}801-1{,}021)sat100=-21{,}632+6{,}780\,sat100\).</p>
     <p>(b) sat100: at <b>private</b> colleges, 100 more average SAT points ↔ $7,801 higher median earnings. public_sat: at public colleges that payoff is <b>$1,021 smaller</b> (so $6,780 per 100 points).</p>
@@ -1617,7 +1618,7 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
     <p>female: holding education fixed, women earn about <b>18% less</b> per hour. bachelor: holding gender fixed, a bachelor's degree goes with about <b>46 log points</b> higher hourly pay (≈ 59%) than a high school diploma.</p>
     <p>OVB = \(\hat\beta_{bach}\times\hat\delta=0.4620\times0.1506=\mathbf{0.0696}\). A = C + bias: −0.1822 + 0.0696 = <b>−0.1126</b> ✓. Women's higher education was hiding part of the gap.</p></div></div></details>
 
-  <p class="q">(16) Panel D: gap without a bachelor's; with one; is the difference significant at 5%?</p>
+  <p class="q"><span class="skip">Not on the midterm</span> (16) Panel D: gap without a bachelor's; with one; is the difference significant at 5%?</p>
   <details><summary>Answer</summary><div class="body"><div class="ans">
     <p>Without a bachelor's: <b>−0.189</b> (about 19% less). With one: −0.189 + 0.013 = <b>−0.176</b> (about 18% less). The difference is the interaction, 0.013, with t = 0.56, p = 0.575: <b>not significant</b>. The gap is about the same for both education groups.</p></div></div></details>
 
@@ -1731,10 +1732,11 @@ Linear regression                       Number of obs =    420
   <details><summary>(e) In ln(earnings) = β₀ + 0.08·educ + u, one more year of schooling goes with about 8% higher earnings.</summary><div class="body"><div class="ans"><p><b>True</b> (approximately). Log-level: 1 unit of X ↔ 100 × β % = 8%. Exactly, e^0.08 − 1 ≈ 8.3%. It's an association, not necessarily causal.</p></div></div></details>
 
   <h3>Problem 3 · Curves and interactions (12 min)</h3>
+  <p class="small">Professor Otero said interactions won't be on the midterm: do (a)–(b) (quadratic), skip (c)–(d).</p>
   <p>Pay = 500 + 40·Exp − 0.6·Exp² (pay in $/week, Exp = years of experience)</p>
   <details><summary>(a) How much does pay change going from 10 to 11 years of experience?</summary><div class="body"><div class="ans"><p>β₁ + β₂(2a + 1) = 40 − 0.6 × 21 = 40 − 12.6 = <b>+$27.40 per week</b>. (Check: Exp² goes from 100 to 121, so the change is 40 − 0.6 × 21.)</p></div></div></details>
   <details><summary>(b) At what experience level does predicted pay peak?</summary><div class="body"><div class="ans"><p>Exp* = −β₁/(2β₂) = 40/(2 × 0.6) = <b>33.3 years</b>. β₁ &gt; 0 and β₂ &lt; 0, so pay rises then falls.</p></div></div></details>
-  <p>Score = 60 + 5·Female + 0.5·Practice + 0.3·(Female × Practice)</p>
+  <p>Score = 60 + 5·Female + 0.5·Practice + 0.3·(Female × Practice) <span class="skip">Not on the midterm</span></p>
   <details><summary>(c) What is the female − male gap for students who do 0 practice problems? For 10 problems?</summary><div class="body"><div class="ans"><p>Gap = 5 + 0.3 × Practice. At 0 problems: <b>5 points</b> (the coefficient on Female = the gap when Practice = 0). At 10: 5 + 3 = <b>8 points</b>.</p></div></div></details>
   <details><summary>(d) What is the slope on practice for women? Interpret β₃ = 0.3 in words.</summary><div class="body"><div class="ans"><p>Men: 0.5 points per problem. Women: 0.5 + 0.3 = <b>0.8 points per problem</b>. β₃: each practice problem goes with 0.3 more points for women than for men; the payoff to practice is bigger for women.</p></div></div></details>
 
@@ -1818,8 +1820,8 @@ Linear regression                       Number of obs =    420
   <div class="qz" data-l="L11" data-a="T"><p class="qz-s"><span class="qz-n">L11 · 63</span> Adjusted R² is always less than or equal to R².</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. It multiplies SSR/TSS by (n − 1)/(n − k − 1) ≥ 1, so it&#x27;s never above R².</p></div></div>
   <div class="qz" data-l="L11" data-a="F"><p class="qz-s"><span class="qz-n">L11 · 64</span> Re-running a dummy regression with private = 1 − public instead of public changes the R² and the SE of the slope.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. Same two groups, same fitted values. The intercept becomes the other group&#x27;s mean and the slope flips sign; SE, |t| and R² are unchanged.</p></div></div>
   <div class="qz" data-l="L12" data-a="T"><p class="qz-s"><span class="qz-n">L12 · 65</span> The t-test for one coefficient in a multiple regression uses the same formula as in a simple regression: (β̂ − β₀)/SE(β̂).</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. Same formula and same critical values; only the SE comes from the multiple regression.</p></div></div>
-  <div class="qz" data-l="L12" data-a="F"><p class="qz-s"><span class="qz-n">L12 · 66</span> In Pay = β₀ + β₁Age + β₂College + β₃(Age × College), β₂ is the college pay gap at every age.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. β₂ is the gap at Age = 0. At age a the gap is β₂ + β₃a.</p></div></div>
-  <div class="qz" data-l="L12" data-a="T"><p class="qz-s"><span class="qz-n">L12 · 67</span> In Y = β₀ + β₁D₁ + β₂D₂ + β₃(D₁ × D₂), β₃ measures how much the D₁ gap differs between D₂ = 1 and D₂ = 0.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. The D₁ gap is β₁ when D₂ = 0 and β₁ + β₃ when D₂ = 1; β₃ is the difference (a difference in differences).</p></div></div>
+  <div class="qz" data-l="L12" data-a="F"><p class="qz-s"><span class="qz-n">L12 · 66</span> <span class="skip">Not on the midterm</span> In Pay = β₀ + β₁Age + β₂College + β₃(Age × College), β₂ is the college pay gap at every age.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. β₂ is the gap at Age = 0. At age a the gap is β₂ + β₃a.</p></div></div>
+  <div class="qz" data-l="L12" data-a="T"><p class="qz-s"><span class="qz-n">L12 · 67</span> <span class="skip">Not on the midterm</span> In Y = β₀ + β₁D₁ + β₂D₂ + β₃(D₁ × D₂), β₃ measures how much the D₁ gap differs between D₂ = 1 and D₂ = 0.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. The D₁ gap is β₁ when D₂ = 0 and β₁ + β₃ when D₂ = 1; β₃ is the difference (a difference in differences).</p></div></div>
   <div class="qz" data-l="L12" data-a="F"><p class="qz-s"><span class="qz-n">L12 · 68</span> Y = β₀ + β₁X + β₂X² cannot be estimated by OLS because the model is not linear.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. OLS needs linearity in the parameters, not in X. X² is just another regressor.</p></div></div>
   <div class="qz" data-l="L12" data-a="F"><p class="qz-s"><span class="qz-n">L12 · 69</span> In the quadratic pay model, the effect of one more year of age is β̂₁ at every age.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. Age² changes too. From age a to a + 1 the change is β̂₁ + β̂₂(2a + 1).</p></div></div>
   <div class="qz" data-l="L12" data-a="T"><p class="qz-s"><span class="qz-n">L12 · 70</span> With β₁ &gt; 0 and β₂ &lt; 0 in Y = β₀ + β₁X + β₂X², Y rises then falls, peaking at X = −β₁/(2β₂).</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. An upside-down parabola; set the slope β₁ + 2β₂X to zero.</p></div></div>
