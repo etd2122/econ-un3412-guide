@@ -189,6 +189,7 @@ mjx-container[display="true"]{overflow-x:auto;overflow-y:hidden;max-width:100%;p
   <ul>
     <li><a href="#review">Review session (Oct 26)</a></li>
     <li><a href="#practice">Practice exam</a></li>
+    <li><a href="#mock">Mock midterm (Oct 27)</a></li>
     <li><a href="#quiz">T/F quiz (all lectures)</a></li>
     <li><a href="#wsquiz">Worksheet quizzes</a></li>
     <li><a href="#tf">True / False drill</a></li>
@@ -1680,6 +1681,72 @@ Linear regression                       Number of obs =    420
   <details><summary>Answer</summary><div class="body"><div class="ans">
     <p>(a) One more year of education ↔ about 9% higher earnings. (b) Elasticity: a 1% higher price ↔ 0.7% lower quantity. (c) E[u<sub>i</sub> | X<sub>i</sub>] = 0. If it fails, β̂₁ → β₁ + cov(X, u)/var(X): a large sample concentrates β̂₁ around the wrong number. (d) The error spread usually varies with X (heteroskedasticity); robust SEs are valid either way. For the college line it rose from $2.38 to $2.94 because the big misses sit at high SAT scores.</p></div></div></details>
 </section>
+
+<section class="block" id="mock">
+  <p class="eyebrow">Practice</p>
+  <h2>Mock midterm (Oct 27)</h2>
+  <p class="lede">60 minutes, cheat sheet only. New contexts, same ideas. Write a verdict and a one-line reason for every part, then open the answers.</p>
+  <div class="toolbar"><button type="button" data-open="mock">Open all answers</button><button type="button" data-close="mock">Close all</button></div>
+
+  <h3>Problem 1 · Practice problems and exam scores (25 min)</h3>
+  <p>400 students. <code>score</code> is the final exam score (0–100), <code>practice</code> is the number of practice problems a student completed, and <code>gpa</code> is GPA before the course.</p>
+<pre><code>. regress score practice, robust
+                                      Number of obs = 400
+                                      R-squared     = 0.1100
+                                      Root MSE      = 12.40
+------------------------------------------------------------------------
+             |             Robust
+       score | Coefficient std. err.     t    P&gt;|t|   [95% conf. interval]
+-------------+----------------------------------------------------------
+    practice |   .8500      .1200      7.08   0.000     .6141     1.0859
+       _cons | 58.2000     1.9000     30.63   0.000   54.4647    61.9353
+------------------------------------------------------------------------
+
+. regress score practice gpa, robust
+                                      R-squared     = 0.2400
+------------------------------------------------------------------------
+    practice |   .4000      .1300      3.08   0.002     .1444      .6556
+         gpa | 10.0000     1.5000      6.67   0.000    7.0511    12.9489
+       _cons | 31.5000     4.8000      6.56   0.000   22.0634    40.9366
+------------------------------------------------------------------------
+
+. regress gpa practice, robust
+------------------------------------------------------------------------
+    practice |   .0450      .0060      7.50   0.000     .0332      .0568
+------------------------------------------------------------------------</code></pre>
+  <details><summary>(a) Interpret the slope in the first regression. What does it predict for a student who does 10 more problems?</summary><div class="body"><div class="ans"><p>Students who complete one more practice problem score <b>0.85 points higher</b> on average. 10 more problems ↔ 10 × 0.85 = <b>8.5 points</b> higher. An association, not yet a causal effect.</p></div></div></details>
+  <details><summary>(b) Test H₀: β₁ = 0 at the 5% level using the first regression.</summary><div class="body"><div class="ans"><p>t = 0.85/0.12 = <b>7.08</b> &gt; 1.96 (p = 0.000), and the 95% CI [0.61, 1.09] excludes 0 ⇒ <b>reject</b>.</p></div></div></details>
+  <details><summary>(c) Before looking at the second regression: sign β₂ and cov(practice, gpa). Which way does leaving out GPA bias the first slope?</summary><div class="body"><div class="ans"><p>β₂ &gt; 0: holding practice fixed, students with higher GPAs score higher. cov(practice, gpa) &gt; 0: stronger students do more practice problems. Bias = (+)(+) = <b>positive ⇒ upward</b>.</p></div></div></details>
+  <details><summary>(d) Show that short slope = long slope + β̂₂ × (slope of gpa on practice).</summary><div class="body"><div class="ans"><p>Bias = β̂_gpa × slope of gpa on practice = 10.0 × 0.045 = <b>0.45</b>.<br>Long + bias = 0.40 + 0.45 = <b>0.85</b> = short ✓</p></div></div></details>
+  <details><summary>(e) Does the first regression overstate or understate the effect of practice? Is it a sign flip?</summary><div class="body"><div class="ans"><p><b>Overstates.</b> The effect is positive and the bias is positive (same sign), so the estimate is pushed away from zero: 0.85 vs. 0.40, more than double. <b>No sign flip</b>: both are positive. On a graph, the short line is <b>steeper</b>.</p></div></div></details>
+  <details><summary>(f) Interpret 0.40. Is it causal? Name one thing still in u and sign its bias.</summary><div class="body"><div class="ans"><p>Comparing students with the <b>same prior GPA</b>, one more practice problem goes with 0.40 more points (10 problems ↔ 4 points).</p><p><b>Probably not fully causal.</b> Still in u: <b>motivation / time spent studying</b>. Motivated students do more problems (cov &gt; 0) and score higher for other reasons too (β₂ &gt; 0) ⇒ still <b>upward</b> bias, so 0.40 likely still overstates.</p></div></div></details>
+  <details><summary>(g) A friend says: "The R² in the first regression is only 0.11, so practice problems barely matter." Respond.</summary><div class="body"><div class="ans"><p>Disagree. R² measures how much of the <b>variation</b> in scores practice explains, not how big or causal its effect is. Scores depend on many other things, so R² is low, but the slope is large and significant: 10 problems ↔ 8.5 points. Low R² ≠ small effect.</p></div></div></details>
+  <details><summary>(h) Another researcher repeats the second regression with 1,600 students. What happens to the SE on practice, and to where the estimate is centered?</summary><div class="body"><div class="ans"><p>n is 4× bigger, so SE shrinks by √4 = 2: about <b>0.13/2 = 0.065</b>. The estimate is centered in the <b>same place</b>: any omitted variable bias (e.g. from motivation) doesn't shrink with n. More precise, not less biased.</p></div></div></details>
+
+  <h3>Problem 2 · True, false or uncertain? (10 min)</h3>
+  <details><summary>(a) The 95% CI for practice in the long regression is [0.14, 0.66], so we would reject H₀: β₁ = 0.70 at the 5% level.</summary><div class="body"><div class="ans"><p><b>True.</b> The 95% CI is the set of values not rejected at 5%. 0.70 is outside it ⇒ reject.</p></div></div></details>
+  <details><summary>(b) Adding a regressor lowered R² from 0.20 to 0.18.</summary><div class="body"><div class="ans"><p><b>False.</b> R² can never fall when you add a regressor (OLS could set its coefficient to 0). Adjusted R² can fall.</p></div></div></details>
+  <details><summary>(c) In score = β₀ + β₁·female + u, recoding the dummy as 1 = male changes |t| for the slope.</summary><div class="body"><div class="ans"><p><b>False.</b> Same two groups, same fitted values. The slope flips sign, the intercept becomes the women's mean, and the SE, |t| and R² stay the same.</p></div></div></details>
+  <details><summary>(d) An experiment's balance table has 20 rows; one has p = 0.03. The randomization failed.</summary><div class="body"><div class="ans"><p><b>False.</b> With 20 true nulls you expect 20 × 0.05 = 1 significant row by chance; Pr(at least one) = 1 − 0.95²⁰ ≈ <b>64%</b>. One flag is normal; check the joint test.</p></div></div></details>
+  <details><summary>(e) In ln(earnings) = β₀ + 0.08·educ + u, one more year of schooling goes with about 8% higher earnings.</summary><div class="body"><div class="ans"><p><b>True</b> (approximately). Log-level: 1 unit of X ↔ 100 × β % = 8%. Exactly, e^0.08 − 1 ≈ 8.3%. It's an association, not necessarily causal.</p></div></div></details>
+
+  <h3>Problem 3 · Curves and interactions (12 min)</h3>
+  <p>Pay = 500 + 40·Exp − 0.6·Exp² (pay in $/week, Exp = years of experience)</p>
+  <details><summary>(a) How much does pay change going from 10 to 11 years of experience?</summary><div class="body"><div class="ans"><p>β₁ + β₂(2a + 1) = 40 − 0.6 × 21 = 40 − 12.6 = <b>+$27.40 per week</b>. (Check: Exp² goes from 100 to 121, so the change is 40 − 0.6 × 21.)</p></div></div></details>
+  <details><summary>(b) At what experience level does predicted pay peak?</summary><div class="body"><div class="ans"><p>Exp* = −β₁/(2β₂) = 40/(2 × 0.6) = <b>33.3 years</b>. β₁ &gt; 0 and β₂ &lt; 0, so pay rises then falls.</p></div></div></details>
+  <p>Score = 60 + 5·Female + 0.5·Practice + 0.3·(Female × Practice)</p>
+  <details><summary>(c) What is the female − male gap for students who do 0 practice problems? For 10 problems?</summary><div class="body"><div class="ans"><p>Gap = 5 + 0.3 × Practice. At 0 problems: <b>5 points</b> (the coefficient on Female = the gap when Practice = 0). At 10: 5 + 3 = <b>8 points</b>.</p></div></div></details>
+  <details><summary>(d) What is the slope on practice for women? Interpret β₃ = 0.3 in words.</summary><div class="body"><div class="ans"><p>Men: 0.5 points per problem. Women: 0.5 + 0.3 = <b>0.8 points per problem</b>. β₃: each practice problem goes with 0.3 more points for women than for men; the payoff to practice is bigger for women.</p></div></div></details>
+
+  <h3>Problem 4 · A tutoring lottery (13 min)</h3>
+  <p>Students enter a lottery for free tutoring. Lottery winners score <b>3 points</b> higher on average than losers. <b>60%</b> of winners actually use the tutoring; no losers get it.</p>
+  <details><summary>(a) Why is winners vs. losers a fair comparison, but users vs. non-users isn't?</summary><div class="body"><div class="ans"><p>A lottery decides who wins, so winners and losers are alike on average: E[Y₀ | win] = E[Y₀ | lose], selection bias = 0. <b>Using</b> the tutoring is a choice: the winners who show up are likely more motivated and would score higher anyway ⇒ positive selection bias.</p></div></div></details>
+  <details><summary>(b) Estimate the effect of tutoring itself. What assumption do you need?</summary><div class="body"><div class="ans"><p>Effect of tutoring = effect of the offer ÷ first stage = 3 / 0.60 = <b>5 points</b> (for students who use tutoring because they won). Needs the <b>exclusion</b> assumption: winning affects scores only through using tutoring.</p></div></div></details>
+  <details><summary>(c) Winners often share their tutoring notes with friends who lost. How does this affect your answer in (b)?</summary><div class="body"><div class="ans"><p>A <b>spillover</b>: it raises the losers' scores, so the winner − loser gap (3) is too small ⇒ the 5-point estimate <b>understates</b> the effect of tutoring. It's an internal-validity threat.</p></div></div></details>
+  <details><summary>(d) The lottery was run only among students who signed up. Is that a threat to internal or external validity? Why?</summary><div class="body"><div class="ans"><p><b>External validity.</b> The comparison is still fair within the sign-ups (internal validity is fine), but students who sign up may be more motivated than everyone else, so the effect may not carry over to all students.</p></div></div></details>
+</section>
+
+
 
 <section class="block quizbox" id="quiz">
   <p class="eyebrow">Practice</p>
