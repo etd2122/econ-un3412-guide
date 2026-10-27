@@ -1424,14 +1424,16 @@ coef(fit); resid(fit); fitted(fit)</code></pre>
     <p>(i) <b>No.</b> It compares different workers in different places, not the same worker moving. Still in u: the kind of jobs (Brasília is full of well-paid federal government jobs), cost of living, experience and ability, and who chooses to live in the capital. These differ between DF and Goiás and affect pay, so 1,244 is not the causal effect of moving.</p></div></div></details>
 
   <details><summary>P2. Perfect multicollinearity, case by case</summary><div class="body"><div class="ans">
-    <p>(a) <b>Yes:</b> X₂ = X₁.</p>
-    <p>(b) <b>No:</b> age² is not a <i>linear</i> function of age (and X₀). The relationship is a curve.</p>
-    <p>(c) <b>Yes:</b> X₂ = 12 X₁.</p>
-    <p>(d) <b>Yes:</b> X₁ + X₂ = 1 = X₀, so X₂ = X₀ − X₁ (the dummy variable trap).</p>
-    <p>(e) <b>Yes:</b> X₁ = 100 X₂.</p>
-    <p>(f) <b>Yes:</b> X₂ = 4 X₀. A constant regressor duplicates the intercept.</p>
-    <p>(g) <b>Yes:</b> X₂ = X₁ + 100 X₀.</p>
-    <p>(h) <b>Yes,</b> if the one regressor doesn't vary in the sample, it's a multiple of X₀. Example: a dummy for "Columbia student" in a sample of only Columbia students (it's 1 for everyone, so X₁ = X₀). Then Σ(Xᵢ − X̄)² = 0 and the slope formula divides by zero.</p></div></div></details>
+    <div class="tip"><p><b>First, what is X₀?</b> Every regression with an intercept secretly has one more column: a column of <b>1s</b>, one for every person. The intercept β₀ is that column's coefficient (β₀ × 1 = β₀). The worksheet calls the column X₀. So "X₂ = 4X₀" just means "X₂ is the number 4 for everyone," and "X₁ + X₂ = X₀" means "X₁ + X₂ = 1 for everyone."</p>
+    <p><b>The test for every case:</b> can you write one column <i>exactly</i> from the others using only multiplying by numbers and adding (including adding a constant)? If yes, OLS can't tell them apart: <b>perfect multicollinearity</b>. Picture the data table and ask: "if I know X₁, do I know X₂ for sure, through a straight-line rule?"</p></div>
+    <p>(a) <b>Yes.</b> X₁ = age, X₂ = age. Same column twice: X₂ = X₁. OLS can't split age's effect between two identical copies.</p>
+    <p>(b) <b>No.</b> X₂ = age². Knowing age does tell you age², but the rule is <i>squaring</i>, which is a curve, not a straight line. From age 20 → 30, age² goes up 500; from 50 → 60, up 1,100. No single "multiply and add" rule works, so OLS can estimate both. (They are correlated, which is imperfect multicollinearity: fine.)</p>
+    <p>(c) <b>Yes.</b> Months = 12 × years for everyone: X₂ = 12X₁. One more year is automatically 12 more months, so you can't change one holding the other fixed.</p>
+    <p>(d) <b>Yes, the dummy trap.</b> Everyone is either a New York resident or not, so X₁ + X₂ = 1 for every person. That "1 for everyone" is exactly the intercept's column: X₁ + X₂ = X₀, or X₂ = 1 − X₁. Fix: drop one dummy (it becomes the reference group).</p>
+    <p>(e) <b>Yes.</b> 85% correct = 0.85 as a fraction, so percent = 100 × fraction: X₁ = 100X₂. Same information in different units.</p>
+    <p>(f) <b>Yes.</b> X₂ = 4 for everyone, which is just 4 × (the column of 1s): X₂ = 4X₀. A variable that never changes copies the intercept: OLS can't tell β₀ apart from β₂.</p>
+    <p>(g) <b>Yes.</b> X₂ = earnings + 100 for everyone: X₂ = X₁ + 100 × (column of 1s) = X₁ + 100X₀. Adding a constant still counts as a straight-line rule.</p>
+    <p>(h) <b>Yes,</b> if that one regressor is the same for everyone in the sample, because then it's a multiple of the column of 1s. Example: a "Columbia student" dummy in a sample of only Columbia students is 1 for everyone, so X₁ = X₀. In the slope formula, Σ(Xᵢ − X̄)² = 0 (every X equals the mean), so you'd divide by zero: with no variation in X, there's nothing to learn the slope from.</p></div></div></details>
 
   <details><summary>P3. Does taking econometrics raise your earnings?</summary><div class="body"><div class="ans">
     <p>(a) \(Earnings_i=\beta_0+\beta_1Econometrics_i+u_i\).</p>
