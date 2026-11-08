@@ -1217,7 +1217,7 @@ linearHypothesis(fit, c("mt = 0", "ms = 0"), white.adjust = "hc1")
     <div class="callout"><p><b>You have already seen two F-tests.</b> The <code>F(5, 4994) = 78.95</code> at the top of every Stata regression is the F-test that <b>all slopes are zero</b> (here: educ, age and the three state dummies). And in Stop 4 below, <code>test college age_college</code> asks whether graduates and non-graduates have the same line.</p></div>
   </div>
 
-  <div class="stop"><p class="sl">Stop 3 · When the effect depends on someone's group: two dummies <span class="skip">Not on the midterm</span></p>
+  <div class="stop"><p class="sl">Stop 3 · When the effect depends on someone's group: two dummies <span class="pill">Final: needed for diff-in-diff</span></p>
     <p>A picture from all 2.7 million Brazilian formal jobs: average pay rises with age much faster for college graduates than for workers without a degree. A regression with one slope for everyone can't show that.</p>
     <p>Effects that depend on another variable are everywhere: the effect of price on demand varies with income, advertising's effect on sales varies with competition, sleep's effect on test scores varies with caffeine. This matters for policy, because it tells you <b>who</b> a policy helps most.</p>
     <p>Start with two dummies: \(D_1=1\) if 35–45 ("old"), \(D_2=1\) if college degree.</p>
@@ -1243,7 +1243,7 @@ linearHypothesis(fit, c("mt = 0", "ms = 0"), white.adjust = "hc1")
       <p>Reading the rest: _cons 2,659 = average pay of young workers without a degree; college 2,066 = the degree premium among young workers.</p></div></div></details>
   </div>
 
-  <div class="stop"><p class="sl">Stop 4 · A dummy times a continuous variable: two lines <span class="skip">Not on the midterm</span></p>
+  <div class="stop"><p class="sl">Stop 4 · A dummy times a continuous variable: two lines <span class="pill">Final: needed for diff-in-diff</span></p>
     <p>Now age \(X\) is continuous and \(D=1\) for a college degree:</p>
     \[Pay_i=\beta_0+\beta_1X_i+\beta_2D_i+\beta_3(X_i\times D_i)+u_i\]
     <details><summary>Slide question: (1) What is the regression line (intercept and slope) for workers without a degree? With a degree? (2) Which term changes the intercept? Which changes the slope?</summary><div class="body"><div class="ans">
