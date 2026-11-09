@@ -217,7 +217,8 @@ details:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--rule))}
     <li><a href="#l10"><span class="n">L10</span>Omitted variable bias</a></li>
     <li><a href="#l11"><span class="n">L11</span>Multiple regression</a></li>
     <li><a href="#l12"><span class="n">L12</span>F-tests, interactions, polynomials</a></li>
-    <li><a href="#ahead"><span class="n">→</span>Next: binary outcomes</a></li>
+    <li><a href="#l13"><span class="n">L13</span>Binary outcomes</a></li>
+    <li><a href="#ahead"><span class="n">→</span>Next: instrumental variables</a></li>
   </ul>
   <h4>Answers</h4>
   <ul>
@@ -502,6 +503,7 @@ Residuals 17868 1.2812e+13 7.1702e+08</code></pre>
     <div class="stop"><p class="sl">L10 · What goes wrong: omitted variables</p><p>If something left in u affects Y <i>and</i> moves with X, the slope picks up its effect. That is omitted variable bias, and you can predict its direction from two signs.</p></div>
     <div class="stop"><p class="sl">L11 · The fix we can try: multiple regression</p><p>Put the omitted variable into the regression and compare observations that share its value. This removes bias from the variables we include, never from the ones we leave out.</p></div>
     <div class="stop"><p class="sl">L12 · Effects that differ</p><p>The effect of X may differ across groups (interactions: X × D lets each group have its own slope) or across values of X itself (polynomials: X² lets the slope bend). These are still ordinary regressions, tested with the same t-test.</p></div>
+    <div class="stop"><p class="sl">L13 · When Y is yes or no</p><p>With a 0/1 outcome the regression line is a probability. OLS (the linear probability model) reads as percentage points but can leave [0, 1]; probit and logit bend the line into an S. The causal question is unchanged: the mortgage race gap shrinks as we hold more of the loan file fixed, but what's still in u decides whether the rest is discrimination.</p></div>
   </div>
   <div class="tip"><p>Almost any concept question can be answered by asking three things in order: (1) What is being compared? (2) What else differs between the groups being compared (what is in u)? (3) Does that make the estimate too big or too small?</p></div>
 </section>
@@ -1328,16 +1330,260 @@ linearHypothesis(fit, c("mt = 0", "ms = 0"), white.adjust = "hc1")
   <details><summary>Why is the coefficient on <code>age</code> alone (335) not "the effect of one more year of age" in the quadratic model?</summary><div class="body"><div class="ans"><p>Because changing age also changes age². The effect is β̂₁ + β̂₂(2a + 1), which depends on the starting age a; 335 is only the slope near age 0, outside the data.</p></div></div></details>
 </section>
 
+<section class="block" id="l13">
+  <p class="eyebrow">Lecture 13 · Mon Nov 9 · Final material <span class="pill">New</span></p>
+  <h2>Binary outcomes: linear probability, probit and logit</h2>
+  <p class="lede">Until now Y was an amount: earnings, pay, test scores. Today Y is a yes/no: was the mortgage denied? The big idea is that nothing new is needed to <i>run</i> the regression; what changes is how you <b>read</b> it. The regression line becomes a probability. Reading: S&amp;W 11.1, 11.2, 11.4.</p>
+
+  <div class="journey">
+  <div class="stop"><p class="sl">Stop 1 · The question: is there discrimination in mortgage lending?</p>
+    <p>Two people walk into a bank with the same income, credit history, debts, down payment and job. The only difference is race. Does the bank treat them the same?</p>
+    <p><b>The data:</b> Boston Fed study (Munnell et al., 1996, AER), Home Mortgage Disclosure Act (HMDA) data. 2,380 mortgage applications in Boston, 1990: 339 from Black applicants, 2,041 from White applicants.</p>
+    <ul>
+      <li><b>Outcome:</b> <code>deny</code> = 1 if the mortgage was denied, 0 if approved.</li>
+      <li><b>pi</b>: payment-to-income (P/I) ratio, the share of monthly income going to debt payments <i>including</i> the new mortgage.</li>
+      <li><b>black</b> = 1 if the applicant is Black, 0 if White.</li>
+    </ul>
+    <p><b>Raw denial rates:</b> White 9.3%, Black 28.3%. Black applicants were denied about <b>three times</b> as often.</p>
+    <details><summary>Slide question: is this evidence of discrimination?</summary><div class="body"><div class="ans">
+      <p><b>Not by itself.</b> This is a raw comparison of two groups, exactly the setup from Lecture 5: observed difference = causal effect + selection bias. If Black and White applicants differ on things the bank legitimately looks at (P/I, credit history, loan size), part of the 19-point gap comes from those differences. In regression language: those variables are in u and correlated with <code>black</code>, so they'd create omitted variable bias. The rest of the lecture holds them fixed.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 2 · What a regression line means when Y is 0 or 1</p>
+    <p>Plot <code>deny</code> against P/I and every point sits on one of two horizontal lines, 0 or 1. What could a line through that cloud mean? Follow the steps:</p>
+    <ol>
+      <li>The model is the usual one: \(Deny_i=\beta_0+\beta_1 P/I_i+u_i\). \(Deny_i\) is what we observe, 0 or 1.</li>
+      <li>The regression line is the <b>average</b> of Y at each X: \(E(Deny_i\mid P/I_i)=\beta_0+\beta_1P/I_i\), because \(E(u_i\mid P/I_i)=0\).</li>
+      <li>The average of a 0/1 variable is the <b>share of 1s</b>: \(E(Y\mid X)=1\times\Pr(Y=1\mid X)+0\times\Pr(Y=0\mid X)=\Pr(Y=1\mid X)\).</li>
+    </ol>
+    \[\Pr(Deny_i=1\mid P/I_i)=\beta_0+\beta_1P/I_i\]
+    <div class="plain"><p class="ph">In plain words</p><p>With a binary Y, the regression line <b>is a probability</b>: the predicted chance that Y = 1 for someone with that X. That's the <b>linear probability model (LPM)</b>, and it's estimated with plain OLS, the same <code>regress</code> command.</p></div>
+    <details><summary>Slide question: how do we interpret β₁?</summary><div class="body"><div class="ans">
+      <p>β₁ is the change in the <b>probability</b> that Y = 1 for a one-unit increase in X. Measure it in <b>percentage points</b>.</p>
+      <p>Percentage points vs. percent: going from 0.12 to 0.14 is <b>2 percentage points</b>. As a percent change it's 0.02/0.12 ≈ <b>17%</b>. Exam answers about LPM coefficients should say "percentage points."</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 3 · The LPM in the mortgage data</p>
+<pre><code>. regress deny pi, robust                         n = 2,380   R² = 0.0397
+------------------------------------------------------------------------------
+             |               Robust
+        deny | Coefficient  std. err.      t    P&gt;|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+          pi |   .6035349   .0984826     6.13   0.000     .4104144    .7966555
+       _cons |  -.0799096   .0319666    -2.50   0.012    -.1425949   -.0172243</code></pre>
+    <details><summary>Slide question: interpret β̂₁ = 0.604.</summary><div class="body"><div class="ans">
+      <p>A one-unit increase in P/I raises the predicted probability of denial by 0.604, i.e. <b>60.4 percentage points</b>. But P/I runs from about 0 to 1 (a P/I of 1 means <i>all</i> income goes to debt), so a unit change is huge. Rescale to a sensible change: <b>+0.1 in P/I → +6.0 percentage points</b> (0.604 × 0.1).</p>
+      <p>Significant: t = 6.13 &gt; 1.96. The fitted line: \(\widehat{\Pr}(Deny=1\mid P/I)=-0.080+0.604\times P/I\).</p></div></div></details>
+    <p><b>Adding race:</b> \(Deny_i=\beta_0+\beta_1P/I_i+\beta_2Black_i+u_i\), still OLS.</p>
+<pre><code>. regress deny pi black, robust                   n = 2,380   R² = 0.0760
+-------------+----------------------------------------------------------------
+          pi |   .5591946   .0886663     6.31   0.000     .3853233    .7330658
+       black |   .1774282   .0249463     7.11   0.000     .1285096    .2263469
+       _cons |  -.0905136   .0285996    -3.16   0.002    -.1465963   -.0344309</code></pre>
+    <details><summary>Slide question: interpret β̂₂ = 0.177.</summary><div class="body"><div class="ans">
+      <p>Comparing applicants with the <b>same P/I ratio</b>, Black applicants are <b>17.7 percentage points</b> more likely to be denied. t = 7.11, so it's highly significant. It's a dummy, so β̂₂ is a gap between two parallel lines: e.g. at P/I = 0.3, 7.7% for White vs. 25.5% for Black applicants.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 4 · Is it discrimination? Holding fixed what the loan officer sees</p>
+    <details><summary>Slide question: at the same P/I, Black applicants are denied 17.7 points more often. Is this evidence of discrimination?</summary><div class="body"><div class="ans">
+      <p>Still not conclusive. Banks also look at <b>credit history</b>, loan-to-value, whether the applicant was denied mortgage insurance, self-employment, and so on. If these differ by race and are left out, β̂₂ picks them up: <b>omitted variable bias</b>. The good news: the Boston Fed collected all of them from the loan files, so we can hold them fixed with multiple regression (Lecture 11).</p></div></div></details>
+    <div class="tw"><table><tr><th></th><th>(1)</th><th>(2)</th><th>(3)</th></tr>
+    <tr><th>black</th><td>0.177<br><span class="small">(0.025)</span></td><td>0.112<br><span class="small">(0.024)</span></td><td><b>0.084</b><br><span class="small">(0.023)</span></td></tr>
+    <tr><th>P/I ratio</th><td>✓</td><td>✓</td><td>✓</td></tr>
+    <tr><th>Credit history</th><td></td><td>✓</td><td>✓</td></tr>
+    <tr><th>Loan, insurance, self-employment</th><td></td><td></td><td>✓</td></tr>
+    <tr><th>R²</th><td>0.08</td><td>0.16</td><td>0.27</td></tr></table></div>
+    <p class="small">Linear probability models, Boston HMDA data, robust SEs in parentheses.</p>
+    <div class="plain"><p class="ph">How to read the table, step by step</p>
+      <p>(1) The coefficient <b>falls</b> as controls are added: 0.177 → 0.112 → 0.084. So the omitted variables were positively correlated with being Black and raised denial: column (1) had <b>upward</b> OVB.</p>
+      <p>(2) It <b>doesn't go to zero</b>. Holding everything in (3) fixed, Black applicants are <b>8.4 percentage points</b> more likely to be denied, t = 3.71. That's about half the gap with P/I alone, and almost as large as the White denial rate itself (9.3%).</p>
+      <p>(3) R² rises from 0.08 to 0.27, but that's about fit, not about whether 0.084 is causal (Lecture 8).</p></div>
+    <details><summary>Slide question: applicants who look the same on paper are treated differently. What could still make this gap something other than discrimination?</summary><div class="body"><div class="ans">
+      <p>The usual suspect: anything the loan officer sees that <b>isn't in the data</b> and differs by race on average, e.g. information from the interview, wealth or family help not in the file, or details of credit history the controls measure coarsely. Any such variable is still in u and correlated with <code>black</code>, so 0.084 could still carry OVB (of either sign). Multiple regression removes bias only from the variables you include (Lecture 11). The argument for discrimination is that the Boston Fed recorded essentially everything in the loan file, so there's little left for the officer to see.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 5 · Where the LPM breaks: predictions and constant effects</p>
+    <p>Back to \(\widehat{\Pr}(Deny=1\mid P/I)=-0.080+0.604\times P/I\).</p>
+    <ul>
+      <li>Applicant A, P/I = 0.3: −0.080 + 0.604 × 0.3 = <b>10.1%</b></li>
+      <li>Applicant B, P/I = 0.4: −0.080 + 0.604 × 0.4 = <b>16.2%</b></li>
+      <li>Difference: 6.0 percentage points = β̂₁ × 0.1.</li>
+    </ul>
+    <details><summary>Slide question: what about applicant C, with P/I = 0.1? And applicant D, who has the highest P/I in the data, 3.0?</summary><div class="body"><div class="ans">
+      <p><b>C:</b> −0.080 + 0.604 × 0.1 = −0.020, a probability of <b>−2%</b>. <b>D:</b> −0.080 + 0.604 × 3.0 = 1.73, a probability of <b>173%</b>.</p>
+      <p>Both are impossible. A straight line has no reason to stay between 0 and 1, so the LPM can predict probabilities <b>below 0 or above 1</b>.</p></div></div></details>
+    <p><b>Constant effects.</b> The line says +6.0 points for every 0.1 of P/I, at every P/I. The actual denial shares by P/I bins of 0.1 climb 7% → 10% → 27% → 48%.</p>
+    <details><summary>Slide question: do the data look linear?</summary><div class="body"><div class="ans"><p><b>No.</b> The steps get bigger as P/I rises (+3 points, then +17, then +21). The effect of P/I is small at low P/I and large at high P/I, which a single slope can't capture.</p></div></div></details>
+    <div class="tw"><table><tr><th>LPM advantages</th><th>LPM limitations</th></tr>
+    <tr><td>Easy to estimate: it's OLS.</td><td>Can predict probabilities below 0 or above 1.</td></tr>
+    <tr><td>Easy to interpret: coefficients are changes in probability, in percentage points.</td><td>Effects are constant: one more unit of X moves the probability by the same amount at every level.</td></tr>
+    <tr><td>All our tools work: t-tests, F-tests, CIs (use robust SEs).</td><td></td></tr></table></div>
+    <p>Despite the limitations, the LPM is <b>widely used</b> in applied research because it's simple.</p>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 6 · Probit and logit: an S-curve</p>
+    <p>We want \(\Pr(Y=1\mid X)\) to <b>rise with X</b> and <b>stay between 0 and 1</b>. Step by step:</p>
+    <ol>
+      <li>Start with the index \(z=\beta_0+\beta_1X\). It can be any number, from −∞ to +∞.</li>
+      <li>A probability must be in [0, 1]. So pass z through a function G that takes any number, returns a number between 0 and 1, and is increasing.</li>
+      <li>We already know such functions: <b>cumulative distribution functions (cdfs)</b>. A cdf is \(\Pr(Z\le z)\), always between 0 and 1, always increasing.</li>
+    </ol>
+    \[\textbf{Probit: }\Pr(Y=1\mid X)=\Phi(\beta_0+\beta_1X)\qquad\textbf{Logit: }\Pr(Y=1\mid X)=\Lambda(\beta_0+\beta_1X)=\frac{1}{1+e^{-(\beta_0+\beta_1X)}}\]
+    <p>Φ is the standard normal cdf (the one from your z-tables); Λ is the standard logistic cdf. Both draw the same S shape.</p>
+    <figure style="margin:12px 0">
+<svg viewBox="0 0 360 230" width="360" height="230" role="img" aria-label="Predicted probability of denial against P/I: the linear probability model is a straight line that goes below 0 and above 1; probit and logit are S-curves between 0 and 1" style="max-width:100%;height:auto">
+<line x1="44" y1="175.5" x2="340" y2="175.5" stroke="var(--rule)" stroke-width="1"/><text x="38" y="179.5" text-anchor="end" font-size="11" fill="var(--muted)">0</text>
+<line x1="44" y1="103.0" x2="340" y2="103.0" stroke="var(--rule)" stroke-width="1"/><text x="38" y="107.0" text-anchor="end" font-size="11" fill="var(--muted)">0.5</text>
+<line x1="44" y1="30.5" x2="340" y2="30.5" stroke="var(--rule)" stroke-width="1"/><text x="38" y="34.5" text-anchor="end" font-size="11" fill="var(--muted)">1</text>
+<text x="44.0" y="206" text-anchor="middle" font-size="11" fill="var(--muted)">0</text>
+<text x="118.0" y="206" text-anchor="middle" font-size="11" fill="var(--muted)">0.5</text>
+<text x="192.0" y="206" text-anchor="middle" font-size="11" fill="var(--muted)">1</text>
+<text x="266.0" y="206" text-anchor="middle" font-size="11" fill="var(--muted)">1.5</text>
+<text x="340.0" y="206" text-anchor="middle" font-size="11" fill="var(--muted)">2</text>
+<line x1="44" y1="190" x2="340" y2="190" stroke="var(--muted)" stroke-width="1.5"/>
+<text x="340" y="228" text-anchor="end" font-size="11" fill="var(--muted)">P/I ratio</text>
+<path d="M44.0,187.1 L45.5,186.2 L47.0,185.3 L48.4,184.5 L49.9,183.6 L51.4,182.7 L52.9,181.8 L54.4,181.0 L55.8,180.1 L57.3,179.2 L58.8,178.3 L60.3,177.5 L61.8,176.6 L63.2,175.7 L64.7,174.8 L66.2,174.0 L67.7,173.1 L69.2,172.2 L70.6,171.3 L72.1,170.5 L73.6,169.6 L75.1,168.7 L76.6,167.8 L78.0,167.0 L79.5,166.1 L81.0,165.2 L82.5,164.3 L84.0,163.5 L85.4,162.6 L86.9,161.7 L88.4,160.8 L89.9,160.0 L91.4,159.1 L92.8,158.2 L94.3,157.3 L95.8,156.5 L97.3,155.6 L98.8,154.7 L100.2,153.8 L101.7,153.0 L103.2,152.1 L104.7,151.2 L106.2,150.3 L107.6,149.5 L109.1,148.6 L110.6,147.7 L112.1,146.8 L113.6,146.0 L115.0,145.1 L116.5,144.2 L118.0,143.3 L119.5,142.5 L121.0,141.6 L122.4,140.7 L123.9,139.8 L125.4,139.0 L126.9,138.1 L128.4,137.2 L129.8,136.3 L131.3,135.5 L132.8,134.6 L134.3,133.7 L135.8,132.8 L137.2,132.0 L138.7,131.1 L140.2,130.2 L141.7,129.3 L143.2,128.5 L144.6,127.6 L146.1,126.7 L147.6,125.8 L149.1,125.0 L150.6,124.1 L152.0,123.2 L153.5,122.3 L155.0,121.5 L156.5,120.6 L158.0,119.7 L159.4,118.8 L160.9,118.0 L162.4,117.1 L163.9,116.2 L165.4,115.3 L166.8,114.5 L168.3,113.6 L169.8,112.7 L171.3,111.8 L172.8,111.0 L174.2,110.1 L175.7,109.2 L177.2,108.3 L178.7,107.5 L180.2,106.6 L181.6,105.7 L183.1,104.8 L184.6,103.9 L186.1,103.1 L187.6,102.2 L189.0,101.3 L190.5,100.4 L192.0,99.6 L193.5,98.7 L195.0,97.8 L196.4,96.9 L197.9,96.1 L199.4,95.2 L200.9,94.3 L202.4,93.4 L203.8,92.6 L205.3,91.7 L206.8,90.8 L208.3,89.9 L209.8,89.1 L211.2,88.2 L212.7,87.3 L214.2,86.4 L215.7,85.6 L217.2,84.7 L218.6,83.8 L220.1,82.9 L221.6,82.1 L223.1,81.2 L224.6,80.3 L226.0,79.4 L227.5,78.6 L229.0,77.7 L230.5,76.8 L232.0,75.9 L233.4,75.1 L234.9,74.2 L236.4,73.3 L237.9,72.4 L239.4,71.6 L240.8,70.7 L242.3,69.8 L243.8,68.9 L245.3,68.1 L246.8,67.2 L248.2,66.3 L249.7,65.4 L251.2,64.6 L252.7,63.7 L254.2,62.8 L255.6,61.9 L257.1,61.1 L258.6,60.2 L260.1,59.3 L261.6,58.4 L263.0,57.6 L264.5,56.7 L266.0,55.8 L267.5,54.9 L269.0,54.1 L270.4,53.2 L271.9,52.3 L273.4,51.4 L274.9,50.6 L276.4,49.7 L277.8,48.8 L279.3,47.9 L280.8,47.1 L282.3,46.2 L283.8,45.3 L285.2,44.4 L286.7,43.6 L288.2,42.7 L289.7,41.8 L291.2,40.9 L292.6,40.1 L294.1,39.2 L295.6,38.3 L297.1,37.4 L298.6,36.6 L300.0,35.7 L301.5,34.8 L303.0,33.9 L304.5,33.1 L306.0,32.2 L307.4,31.3 L308.9,30.4 L310.4,29.6 L311.9,28.7 L313.4,27.8 L314.8,26.9 L316.3,26.1 L317.8,25.2 L319.3,24.3 L320.8,23.4 L322.2,22.6 L323.7,21.7 L325.2,20.8 L326.7,19.9 L328.2,19.1 L329.6,18.2 L331.1,17.3 L332.6,16.4 L334.1,16.0 L335.6,16.0 L337.0,16.0 L338.5,16.0 L340.0,16.0" fill="none" stroke="var(--fixc)" stroke-width="2.5" stroke-dasharray="6 4"/>
+<path d="M44.0,173.5 L45.5,173.3 L47.0,173.1 L48.4,172.9 L49.9,172.7 L51.4,172.5 L52.9,172.3 L54.4,172.1 L55.8,171.8 L57.3,171.6 L58.8,171.3 L60.3,171.0 L61.8,170.7 L63.2,170.4 L64.7,170.0 L66.2,169.7 L67.7,169.3 L69.2,168.9 L70.6,168.5 L72.1,168.0 L73.6,167.6 L75.1,167.1 L76.6,166.6 L78.0,166.0 L79.5,165.5 L81.0,164.9 L82.5,164.3 L84.0,163.6 L85.4,163.0 L86.9,162.3 L88.4,161.6 L89.9,160.8 L91.4,160.0 L92.8,159.2 L94.3,158.4 L95.8,157.5 L97.3,156.6 L98.8,155.7 L100.2,154.7 L101.7,153.8 L103.2,152.7 L104.7,151.7 L106.2,150.6 L107.6,149.5 L109.1,148.4 L110.6,147.2 L112.1,146.0 L113.6,144.7 L115.0,143.5 L116.5,142.2 L118.0,140.9 L119.5,139.5 L121.0,138.2 L122.4,136.7 L123.9,135.3 L125.4,133.9 L126.9,132.4 L128.4,130.9 L129.8,129.4 L131.3,127.8 L132.8,126.3 L134.3,124.7 L135.8,123.1 L137.2,121.4 L138.7,119.8 L140.2,118.2 L141.7,116.5 L143.2,114.8 L144.6,113.1 L146.1,111.4 L147.6,109.7 L149.1,108.0 L150.6,106.3 L152.0,104.6 L153.5,102.9 L155.0,101.2 L156.5,99.4 L158.0,97.7 L159.4,96.0 L160.9,94.3 L162.4,92.6 L163.9,90.9 L165.4,89.3 L166.8,87.6 L168.3,86.0 L169.8,84.3 L171.3,82.7 L172.8,81.1 L174.2,79.5 L175.7,78.0 L177.2,76.4 L178.7,74.9 L180.2,73.4 L181.6,71.9 L183.1,70.5 L184.6,69.1 L186.1,67.7 L187.6,66.3 L189.0,64.9 L190.5,63.6 L192.0,62.3 L193.5,61.1 L195.0,59.8 L196.4,58.6 L197.9,57.5 L199.4,56.3 L200.9,55.2 L202.4,54.2 L203.8,53.1 L205.3,52.1 L206.8,51.1 L208.3,50.2 L209.8,49.2 L211.2,48.4 L212.7,47.5 L214.2,46.7 L215.7,45.9 L217.2,45.1 L218.6,44.3 L220.1,43.6 L221.6,42.9 L223.1,42.3 L224.6,41.6 L226.0,41.0 L227.5,40.5 L229.0,39.9 L230.5,39.4 L232.0,38.9 L233.4,38.4 L234.9,37.9 L236.4,37.5 L237.9,37.0 L239.4,36.6 L240.8,36.3 L242.3,35.9 L243.8,35.6 L245.3,35.2 L246.8,34.9 L248.2,34.6 L249.7,34.4 L251.2,34.1 L252.7,33.9 L254.2,33.6 L255.6,33.4 L257.1,33.2 L258.6,33.0 L260.1,32.9 L261.6,32.7 L263.0,32.5 L264.5,32.4 L266.0,32.2 L267.5,32.1 L269.0,32.0 L270.4,31.9 L271.9,31.8 L273.4,31.7 L274.9,31.6 L276.4,31.5 L277.8,31.4 L279.3,31.3 L280.8,31.3 L282.3,31.2 L283.8,31.1 L285.2,31.1 L286.7,31.0 L288.2,31.0 L289.7,31.0 L291.2,30.9 L292.6,30.9 L294.1,30.8 L295.6,30.8 L297.1,30.8 L298.6,30.8 L300.0,30.7 L301.5,30.7 L303.0,30.7 L304.5,30.7 L306.0,30.7 L307.4,30.6 L308.9,30.6 L310.4,30.6 L311.9,30.6 L313.4,30.6 L314.8,30.6 L316.3,30.6 L317.8,30.6 L319.3,30.6 L320.8,30.6 L322.2,30.6 L323.7,30.5 L325.2,30.5 L326.7,30.5 L328.2,30.5 L329.6,30.5 L331.1,30.5 L332.6,30.5 L334.1,30.5 L335.6,30.5 L337.0,30.5 L338.5,30.5 L340.0,30.5" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+<path d="M44.0,173.0 L45.5,172.8 L47.0,172.7 L48.4,172.5 L49.9,172.3 L51.4,172.1 L52.9,171.9 L54.4,171.7 L55.8,171.5 L57.3,171.2 L58.8,171.0 L60.3,170.7 L61.8,170.5 L63.2,170.2 L64.7,169.8 L66.2,169.5 L67.7,169.2 L69.2,168.8 L70.6,168.4 L72.1,168.0 L73.6,167.6 L75.1,167.1 L76.6,166.7 L78.0,166.2 L79.5,165.6 L81.0,165.1 L82.5,164.5 L84.0,163.9 L85.4,163.2 L86.9,162.5 L88.4,161.8 L89.9,161.1 L91.4,160.3 L92.8,159.5 L94.3,158.6 L95.8,157.7 L97.3,156.8 L98.8,155.8 L100.2,154.8 L101.7,153.7 L103.2,152.6 L104.7,151.5 L106.2,150.3 L107.6,149.0 L109.1,147.7 L110.6,146.4 L112.1,145.0 L113.6,143.5 L115.0,142.0 L116.5,140.5 L118.0,138.9 L119.5,137.3 L121.0,135.6 L122.4,133.9 L123.9,132.1 L125.4,130.3 L126.9,128.4 L128.4,126.6 L129.8,124.6 L131.3,122.7 L132.8,120.7 L134.3,118.7 L135.8,116.6 L137.2,114.5 L138.7,112.5 L140.2,110.4 L141.7,108.2 L143.2,106.1 L144.6,104.0 L146.1,101.8 L147.6,99.7 L149.1,97.6 L150.6,95.5 L152.0,93.4 L153.5,91.3 L155.0,89.2 L156.5,87.2 L158.0,85.2 L159.4,83.2 L160.9,81.2 L162.4,79.3 L163.9,77.4 L165.4,75.6 L166.8,73.7 L168.3,72.0 L169.8,70.3 L171.3,68.6 L172.8,67.0 L174.2,65.4 L175.7,63.8 L177.2,62.4 L178.7,60.9 L180.2,59.5 L181.6,58.2 L183.1,56.9 L184.6,55.6 L186.1,54.4 L187.6,53.3 L189.0,52.2 L190.5,51.1 L192.0,50.1 L193.5,49.1 L195.0,48.2 L196.4,47.3 L197.9,46.4 L199.4,45.6 L200.9,44.8 L202.4,44.1 L203.8,43.4 L205.3,42.7 L206.8,42.1 L208.3,41.5 L209.8,40.9 L211.2,40.3 L212.7,39.8 L214.2,39.3 L215.7,38.8 L217.2,38.4 L218.6,38.0 L220.1,37.5 L221.6,37.2 L223.1,36.8 L224.6,36.5 L226.0,36.1 L227.5,35.8 L229.0,35.5 L230.5,35.2 L232.0,35.0 L233.4,34.7 L234.9,34.5 L236.4,34.3 L237.9,34.1 L239.4,33.9 L240.8,33.7 L242.3,33.5 L243.8,33.3 L245.3,33.2 L246.8,33.0 L248.2,32.9 L249.7,32.7 L251.2,32.6 L252.7,32.5 L254.2,32.4 L255.6,32.3 L257.1,32.2 L258.6,32.1 L260.1,32.0 L261.6,31.9 L263.0,31.8 L264.5,31.8 L266.0,31.7 L267.5,31.6 L269.0,31.6 L270.4,31.5 L271.9,31.4 L273.4,31.4 L274.9,31.3 L276.4,31.3 L277.8,31.2 L279.3,31.2 L280.8,31.2 L282.3,31.1 L283.8,31.1 L285.2,31.1 L286.7,31.0 L288.2,31.0 L289.7,31.0 L291.2,30.9 L292.6,30.9 L294.1,30.9 L295.6,30.9 L297.1,30.8 L298.6,30.8 L300.0,30.8 L301.5,30.8 L303.0,30.8 L304.5,30.8 L306.0,30.7 L307.4,30.7 L308.9,30.7 L310.4,30.7 L311.9,30.7 L313.4,30.7 L314.8,30.7 L316.3,30.7 L317.8,30.7 L319.3,30.6 L320.8,30.6 L322.2,30.6 L323.7,30.6 L325.2,30.6 L326.7,30.6 L328.2,30.6 L329.6,30.6 L331.1,30.6 L332.6,30.6 L334.1,30.6 L335.6,30.6 L337.0,30.6 L338.5,30.6 L340.0,30.6" fill="none" stroke="var(--ok)" stroke-width="2.5" stroke-dasharray="2 3"/>
+<text x="229.0" y="114.6" text-anchor="start" font-size="11" fill="var(--fixc)">LPM (straight line)</text>
+<text x="337.0" y="50.8" text-anchor="end" font-size="11" fill="var(--accent)">probit</text>
+<text x="337.0" y="64.8" text-anchor="end" font-size="11" fill="var(--ok)">logit</text>
+</svg>
+    <figcaption class="small">Predicted probability of denial, P/I as the only regressor. The LPM line (dashed) drops below 0 and climbs past 1; probit and logit bend to stay inside [0, 1].</figcaption></figure>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 7 · Reading probit and logit coefficients</p>
+    <div class="callout"><p><b>The rule:</b> β₁ is the change in the index z = β₀ + β₁X per unit of X. It is <b>not</b> the change in the probability.</p></div>
+    <div class="tw"><table><tr><th>What you read straight from the output</th><th>What you have to compute</th></tr>
+    <tr><td><b>Sign:</b> β̂₁ &gt; 0 means the probability rises with X.</td><td><b>Size of an effect:</b> the predicted probability at two values of X, then subtract.</td></tr>
+    <tr><td><b>Significance:</b> z = β̂₁/SE(β̂₁) vs. 1.96, as always.</td><td>The difference depends on the starting point x<sub>A</sub> and x<sub>B</sub>, not only on β̂₁.</td></tr></table></div>
+    \[\Delta\widehat{\Pr}=G(\hat\beta_0+\hat\beta_1x_B)-G(\hat\beta_0+\hat\beta_1x_A),\qquad G=\Phi\text{ or }\Lambda\]
+<pre><code>. probit deny pi, robust nolog                    n = 2,380   Pseudo R² = 0.0462
+-------------+----------------------------------------------------------------
+          pi |   2.967907   .4653217     6.38   0.000     2.055893    3.879921
+       _cons |  -2.194159   .1649761   -13.30   0.000    -2.517506   -1.870812
+
+. display normal(_b[_cons] + _b[pi]*0.3)
+.09615315
+. display normal(_b[_cons] + _b[pi]*0.4)
+.15696833</code></pre>
+    <details><summary>Slide question: does the sign make sense? Is the coefficient significant?</summary><div class="body"><div class="ans"><p><b>Sign:</b> positive, so higher P/I → higher probability of denial. Makes sense: more of your income already goes to debt. <b>Significance:</b> z = 2.97/0.465 = 6.38 &gt; 1.96, reject H₀: β₁ = 0. (Stata labels it z instead of t; read it the same way.) Don't read 2.97 as a change in probability; it's on the z scale.</p></div></div></details>
+    <details><summary>Slide question: an applicant has P/I = 0.3. What is the predicted probability of denial?</summary><div class="body"><div class="ans">
+      <p>Step 1, the index: z = −2.194 + 2.968 × 0.3 = <b>−1.30</b>.</p>
+      <p>Step 2, the area: Φ(−1.30) = area under the normal density to the left of −1.30 = <b>9.6%</b>. (LPM said 10.1%.)</p></div></div></details>
+    <details><summary>Slide question: P/I rises from 0.3 to 0.4. What happens to the probability of denial?</summary><div class="body"><div class="ans">
+      <p>z goes from −1.30 to −1.01; Φ goes from 9.6% to 15.7%: <b>+6.1 percentage points</b>.</p>
+      <p>Now P/I from 0.6 to 0.7: z from −0.41 to −0.12; Φ from 34.0% to 45.4%: <b>+11.4 points</b>.</p>
+      <p>Why different? Both strips have the same <b>width</b> on the z axis, since z always moves by β̂₁ × 0.1 ≈ 0.30. The second strip sits where the bell is <b>taller</b>, so it covers almost twice the area.</p></div></div></details>
+    <figure style="margin:12px 0">
+<svg viewBox="0 0 360 200" width="360" height="200" role="img" aria-label="Standard normal bell. Area left of z = −1.30 is 9.6%. Moving z by the same 0.30 adds 6.1 points near −1.30 but 11.4 points near −0.41, where the bell is taller" style="max-width:100%;height:auto">
+<polygon points="20.0,170.0 20.0,169.1 21.6,169.0 23.2,168.9 24.7,168.8 26.3,168.7 27.9,168.6 29.5,168.4 31.1,168.2 32.6,168.1 34.2,167.9 35.8,167.7 37.4,167.5 39.0,167.2 40.5,167.0 42.1,166.7 43.7,166.4 45.3,166.1 46.9,165.7 48.4,165.4 50.0,164.9 51.6,164.5 53.2,164.1 54.8,163.6 56.3,163.0 57.9,162.5 59.5,161.9 61.1,161.2 62.7,160.6 64.2,159.8 65.8,159.1 67.4,158.3 69.0,157.4 70.6,156.5 72.1,155.5 73.7,154.5 75.3,153.5 76.9,152.3 78.5,151.2 80.0,149.9 81.6,148.6 83.2,147.3 84.8,145.8 86.4,144.3 87.9,142.8 89.5,141.2 91.1,139.5 92.7,137.8 94.3,135.9 95.8,134.1 97.4,132.1 99.0,130.1 100.6,128.0 102.2,125.9 103.7,123.7 105.3,121.4 106.9,119.1 108.5,116.7 110.1,114.3 111.6,111.8 113.2,109.3 114.8,106.7 114.8,170.0" fill="var(--accent)" fill-opacity=".25"/>
+<polygon points="114.8,170.0 114.8,106.7 115.0,106.3 115.3,105.9 115.5,105.4 115.8,105.0 116.0,104.6 116.3,104.2 116.5,103.8 116.8,103.4 117.0,103.0 117.3,102.5 117.5,102.1 117.8,101.7 118.0,101.3 118.3,100.9 118.5,100.4 118.8,100.0 119.0,99.6 119.3,99.2 119.5,98.7 119.8,98.3 120.0,97.9 120.2,97.4 120.5,97.0 120.7,96.6 121.0,96.2 121.2,95.7 121.5,95.3 121.7,94.9 122.0,94.4 122.2,94.0 122.5,93.6 122.7,93.1 123.0,92.7 123.2,92.2 123.5,91.8 123.7,91.4 124.0,90.9 124.2,90.5 124.5,90.1 124.7,89.6 124.9,89.2 125.2,88.7 125.4,88.3 125.7,87.9 125.9,87.4 126.2,87.0 126.4,86.5 126.7,86.1 126.9,85.6 127.2,85.2 127.4,84.8 127.7,84.3 127.9,83.9 128.2,83.4 128.4,83.0 128.7,82.5 128.9,82.1 129.2,81.6 129.4,81.2 129.7,80.8 129.7,170.0" fill="var(--accent)" fill-opacity=".6"/>
+<polygon points="159.4,170.0 159.4,33.9 159.6,33.7 159.8,33.4 160.1,33.1 160.3,32.8 160.6,32.6 160.8,32.3 161.1,32.1 161.3,31.8 161.6,31.5 161.8,31.3 162.1,31.0 162.3,30.8 162.6,30.6 162.8,30.3 163.1,30.1 163.3,29.9 163.6,29.6 163.8,29.4 164.1,29.2 164.3,28.9 164.5,28.7 164.8,28.5 165.0,28.3 165.3,28.1 165.5,27.9 165.8,27.7 166.0,27.5 166.3,27.3 166.5,27.1 166.8,26.9 167.0,26.7 167.3,26.5 167.5,26.4 167.8,26.2 168.0,26.0 168.3,25.9 168.5,25.7 168.8,25.5 169.0,25.4 169.2,25.2 169.5,25.1 169.7,24.9 170.0,24.8 170.2,24.6 170.5,24.5 170.7,24.3 171.0,24.2 171.2,24.1 171.5,24.0 171.7,23.8 172.0,23.7 172.2,23.6 172.5,23.5 172.7,23.4 173.0,23.3 173.2,23.2 173.5,23.1 173.7,23.0 174.0,22.9 174.2,22.8 174.2,170.0" fill="var(--fixc)" fill-opacity=".6"/>
+<path d="M20.0,169.1 L21.6,169.0 L23.2,168.9 L24.8,168.8 L26.4,168.7 L28.0,168.5 L29.6,168.4 L31.2,168.2 L32.8,168.1 L34.4,167.9 L36.0,167.7 L37.6,167.4 L39.2,167.2 L40.8,166.9 L42.4,166.6 L44.0,166.3 L45.6,166.0 L47.2,165.6 L48.8,165.3 L50.4,164.8 L52.0,164.4 L53.6,163.9 L55.2,163.4 L56.8,162.9 L58.4,162.3 L60.0,161.7 L61.6,161.0 L63.2,160.3 L64.8,159.6 L66.4,158.8 L68.0,157.9 L69.6,157.1 L71.2,156.1 L72.8,155.1 L74.4,154.1 L76.0,153.0 L77.6,151.8 L79.2,150.6 L80.8,149.3 L82.4,148.0 L84.0,146.5 L85.6,145.1 L87.2,143.5 L88.8,141.9 L90.4,140.3 L92.0,138.5 L93.6,136.7 L95.2,134.8 L96.8,132.9 L98.4,130.9 L100.0,128.8 L101.6,126.7 L103.2,124.5 L104.8,122.2 L106.4,119.8 L108.0,117.5 L109.6,115.0 L111.2,112.5 L112.8,109.9 L114.4,107.3 L116.0,104.7 L117.6,102.0 L119.2,99.3 L120.8,96.5 L122.4,93.7 L124.0,90.9 L125.6,88.0 L127.2,85.2 L128.8,82.3 L130.4,79.4 L132.0,76.5 L133.6,73.7 L135.2,70.8 L136.8,68.0 L138.4,65.2 L140.0,62.4 L141.6,59.7 L143.2,57.0 L144.8,54.3 L146.4,51.8 L148.0,49.3 L149.6,46.8 L151.2,44.5 L152.8,42.2 L154.4,40.0 L156.0,37.9 L157.6,36.0 L159.2,34.1 L160.8,32.4 L162.4,30.7 L164.0,29.2 L165.6,27.8 L167.2,26.6 L168.8,25.5 L170.4,24.5 L172.0,23.7 L173.6,23.0 L175.2,22.5 L176.8,22.1 L178.4,21.9 L180.0,21.8 L181.6,21.9 L183.2,22.1 L184.8,22.5 L186.4,23.0 L188.0,23.7 L189.6,24.5 L191.2,25.5 L192.8,26.6 L194.4,27.8 L196.0,29.2 L197.6,30.7 L199.2,32.4 L200.8,34.1 L202.4,36.0 L204.0,37.9 L205.6,40.0 L207.2,42.2 L208.8,44.5 L210.4,46.8 L212.0,49.3 L213.6,51.8 L215.2,54.3 L216.8,57.0 L218.4,59.7 L220.0,62.4 L221.6,65.2 L223.2,68.0 L224.8,70.8 L226.4,73.7 L228.0,76.5 L229.6,79.4 L231.2,82.3 L232.8,85.2 L234.4,88.0 L236.0,90.9 L237.6,93.7 L239.2,96.5 L240.8,99.3 L242.4,102.0 L244.0,104.7 L245.6,107.3 L247.2,109.9 L248.8,112.5 L250.4,115.0 L252.0,117.5 L253.6,119.8 L255.2,122.2 L256.8,124.5 L258.4,126.7 L260.0,128.8 L261.6,130.9 L263.2,132.9 L264.8,134.8 L266.4,136.7 L268.0,138.5 L269.6,140.3 L271.2,141.9 L272.8,143.5 L274.4,145.1 L276.0,146.5 L277.6,148.0 L279.2,149.3 L280.8,150.6 L282.4,151.8 L284.0,153.0 L285.6,154.1 L287.2,155.1 L288.8,156.1 L290.4,157.1 L292.0,157.9 L293.6,158.8 L295.2,159.6 L296.8,160.3 L298.4,161.0 L300.0,161.7 L301.6,162.3 L303.2,162.9 L304.8,163.4 L306.4,163.9 L308.0,164.4 L309.6,164.8 L311.2,165.3 L312.8,165.6 L314.4,166.0 L316.0,166.3 L317.6,166.6 L319.2,166.9 L320.8,167.2 L322.4,167.4 L324.0,167.7 L325.6,167.9 L327.2,168.1 L328.8,168.2 L330.4,168.4 L332.0,168.5 L333.6,168.7 L335.2,168.8 L336.8,168.9 L338.4,169.0 L340.0,169.1" fill="none" stroke="var(--ink)" stroke-width="1.8"/>
+<line x1="20" y1="170" x2="340" y2="170" stroke="var(--muted)" stroke-width="1.5"/>
+<text x="114.8" y="185" text-anchor="middle" font-size="10.5" fill="var(--muted)">−1.30</text>
+<text x="159.4" y="185" text-anchor="middle" font-size="10.5" fill="var(--muted)">−0.41</text>
+<text x="50.0" y="136.6" text-anchor="middle" font-size="11" fill="var(--accent)">9.6%</text>
+<text x="100.0" y="95.7" text-anchor="middle" font-size="11" fill="var(--accent)">+6.1</text>
+<text x="150.0" y="21.4" text-anchor="middle" font-size="11" fill="var(--fixc)">+11.4</text>
+<text x="340" y="198" text-anchor="end" font-size="11" fill="var(--muted)">index z</text>
+</svg>
+    <figcaption class="small">Probit: same 0.30 step in z, different area. The strip near the middle of the bell adds almost twice the probability.</figcaption></figure>
+    <p><b>Logit:</b> same steps, with Λ (Stata: <code>invlogit()</code>) instead of Φ.</p>
+<pre><code>. logit deny pi, robust nolog                     n = 2,380   Pseudo R² = 0.0482
+-------------+----------------------------------------------------------------
+          pi |   5.884498   .9999333     5.88   0.000     3.924664    7.844331
+       _cons |  -4.028432   .3589036   -11.22   0.000     -4.73187   -3.324994
+
+. display invlogit(_b[_cons] + _b[pi]*0.3)
+.09422692
+. display invlogit(_b[_cons] + _b[pi]*0.4)
+.15780744</code></pre>
+    <details><summary>Slide question: the probit coefficient on P/I was 2.97; the logit one is 5.88. Did the effect of P/I double?</summary><div class="body"><div class="ans">
+      <p><b>No.</b> The coefficients are on different z scales, because Φ and Λ are cdfs of distributions with different spreads (the standard logistic has SD ≈ 1.8, the standard normal 1). Compare <b>probabilities</b>, not coefficients:</p>
+      <p>P/I = 0.3: z = −4.03 + 5.88 × 0.3 = −2.26, Λ(−2.26) = <b>9.4%</b>. P/I = 0.4: <b>15.8%</b>. Change: <b>+6.4 points</b>, almost the same as probit's +6.1.</p>
+      <p>P/I 0.6 → 0.7: z from −0.50 to 0.09, 37.8% → 52.3%: <b>+14.5 points</b>.</p></div></div></details>
+    <div class="tw"><table><tr><th>Change in Pr(deny), percentage points</th><th>P/I 0.3 → 0.4</th><th>P/I 0.6 → 0.7</th></tr>
+    <tr><td>Linear probability</td><td>+6.0</td><td>+6.0</td></tr>
+    <tr><td>Probit</td><td>+6.1</td><td>+11.4</td></tr>
+    <tr><td>Logit</td><td>+6.4</td><td>+14.5</td></tr></table></div>
+    <div class="plain"><p class="ph">In plain words</p><p>Around P/I = 0.3, where most applicants are, the three models <b>agree</b>. Further out, only the straight line keeps its slope; the S-curves let the effect grow. Why two S-curve models? Logit used to be much faster to compute. Today the choice rarely changes the answer.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 8 · The marginal effect: the slope of the S-curve</p>
+    <p>For a <b>small</b> change in a continuous X, the effect on the probability is the slope of the S-curve. Chain rule:</p>
+    \[\frac{\partial\Pr(Y=1\mid X)}{\partial X}=\frac{dG(z)}{dz}\cdot\beta_1=g(z)\,\beta_1,\qquad z=\beta_0+\beta_1X\]
+    <ul>
+      <li>g is the <b>density</b>, the bell itself: g = φ (normal density) for probit, g = Λ(z)[1 − Λ(z)] for logit.</li>
+      <li>The slope is β₁ times the <b>height of the bell at z</b>: largest where the probability is near ½ (z = 0), small in the tails. It's the same bell we shaded, read as a slope.</li>
+      <li>One summary number, the <b>average marginal effect (AME)</b>: average the slope over all n applicants, \(\frac1n\sum_{i=1}^n g(\hat z_i)\hat\beta_1\). Stata: <code>margins, dydx(pi)</code>.</li>
+      <li>Mortgage data, P/I only: probit <b>0.566</b>, logit <b>0.591</b>, LPM <b>0.604</b>. On average, the three models tell the same story.</li>
+    </ul>
+    <details><summary>Why is the LPM coefficient already "a marginal effect" but the probit coefficient isn't?</summary><div class="body"><div class="ans"><p>In the LPM the probability is β₀ + β₁X, so its slope is β₁ everywhere. In probit the probability is Φ(β₀ + β₁X), so its slope is φ(z)β₁, which changes with X. Since φ is at most 0.399, the probit slope is always smaller than β₁ (here 2.97 → AME 0.566).</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 9 · Race in probit and logit</p>
+<pre><code>. probit deny pi black, robust nolog              n = 2,380   Pseudo R² = 0.0859
+-------------+----------------------------------------------------------------
+          pi |   2.741637   .4441747     6.17   0.000      1.87107    3.612203
+       black |   .7081579    .083188     8.51   0.000     .5451124    .8712035
+       _cons |  -2.258738   .1588211   -14.22   0.000    -2.570022   -1.947454
+
+. display normal(_b[_cons] + _b[pi]*0.3)
+.07546603
+. display normal(_b[_cons] + _b[pi]*0.3 + _b[black])
+.23327952</code></pre>
+    <details><summary>Slide question: (1) Is the coefficient on black significant? (2) At P/I = 0.3, how much more likely is a Black applicant to be denied?</summary><div class="body"><div class="ans">
+      <p>(1) z = 0.708/0.083 = <b>8.51</b> &gt; 1.96: yes, significant (and positive: being Black raises the probability of denial, holding P/I fixed).</p>
+      <p>(2) Plug in black = 0 and black = 1 at the same P/I:</p>
+      <p>White: Φ(−2.259 + 2.742 × 0.3) = Φ(−1.44) = <b>7.5%</b>. Black: Φ(−1.44 + 0.708) = Φ(−0.73) = <b>23.3%</b>. Gap: <b>15.8 percentage points</b>. (LPM said 17.7, the same at every P/I; in probit the gap depends on the P/I you pick.)</p></div></div></details>
+<pre><code>. logit deny pi black, robust nolog               n = 2,380   Pseudo R² = 0.0876
+-------------+----------------------------------------------------------------
+          pi |   5.370362   .9633435     5.57   0.000     3.482244    7.258481
+       black |   1.272782   .1460986     8.71   0.000     .9864339     1.55913
+       _cons |  -4.125558     .345825   -11.93   0.000    -4.803362   -3.447753
+
+. display invlogit(_b[_cons] + _b[pi]*0.3)
+.07485143
+. display invlogit(_b[_cons] + _b[pi]*0.3 + _b[black])
+.22414592</code></pre>
+    <details><summary>Slide question: the logit coefficient on black is 1.27; the probit one was 0.71. Do the two models disagree?</summary><div class="body"><div class="ans">
+      <p><b>No.</b> Different z scales again (logit coefficients typically run roughly 1.6–2 times probit ones; here 1.27/0.71 ≈ 1.8 and 5.88/2.97 ≈ 2.0). In probabilities at P/I = 0.3: logit gives 7.5% vs. 22.4%, a gap of <b>14.9 points</b>; probit gave 15.8. Same sign, same significance (z = 8.71 vs. 8.51), similar size.</p></div></div></details>
+  </div>
+  </div>
+
+  <div class="mine"><p class="mh">What to remember</p><ul>
+    <li>With a binary outcome, the regression line is a probability: \(E(Y\mid X)=\Pr(Y=1\mid X)\).</li>
+    <li>The linear probability model is OLS. Its coefficients are changes in probability, in <b>percentage points</b>.</li>
+    <li>The LPM can predict probabilities outside [0, 1], and its effects are constant.</li>
+    <li>Probit and logit fit an S-curve: \(\Phi(\beta_0+\beta_1X)\) and \(1/(1+e^{-(\beta_0+\beta_1X)})\). Read their coefficients through <b>predicted probabilities</b>: sign and significance from the output, size by computing G at two X values and subtracting.</li>
+    <li>In the mortgage data the race gap shrinks with controls but does not go away, whichever model you use.</li>
+  </ul></div>
+
+  <div class="tip"><p><b>Exam recipe for any probit/logit question:</b> (1) Write z = β̂₀ + β̂₁x (+ other terms) at the first value. (2) Convert: Φ(z) or 1/(1 + e<sup>−z</sup>). (3) Repeat at the second value. (4) Subtract and report in percentage points. Never multiply a probit or logit coefficient by ΔX and call it a probability change.</p></div>
+
+  <h3>Concept checks</h3>
+  <details><summary>An LPM gives β̂ = 0.05 on a dummy for owning a car, Y = 1 if employed. Interpret it.</summary><div class="body"><div class="ans"><p>Car owners are <b>5 percentage points</b> more likely to be employed than non-owners, holding the other regressors fixed. Not "5% more likely": that would be a relative change.</p></div></div></details>
+  <details><summary>Why does a binary Y make the LPM's errors heteroskedastic?</summary><div class="body"><div class="ans"><p>Given X, Y is 0/1 with probability p(X), so var(u | X) = var(Y | X) = p(X)[1 − p(X)], which changes with X. Use robust SEs (<code>, robust</code>), as the slides do.</p></div></div></details>
+  <details><summary>A probit has β̂₁ = 0.5 on X. Does a one-unit increase in X raise the probability by 50 points?</summary><div class="body"><div class="ans"><p>No. 0.5 is the change in the index z. The change in probability is Φ(z + 0.5) − Φ(z), which depends on where you start and is at most about 0.4 × 0.5 ≈ 0.2 for small changes near z = 0.</p></div></div></details>
+  <details><summary>Probit: is the effect of X on the probability bigger for someone with predicted probability 50% or 3%?</summary><div class="body"><div class="ans"><p>50%. That's z = 0, where the bell is tallest, so the same step in z adds the most area. At 3% you're in the left tail and the bell is flat.</p></div></div></details>
+  <details><summary>Probit coefficient 0.71, logit coefficient 1.27 on the same variable. Which model says the variable matters more?</summary><div class="body"><div class="ans"><p>Neither. The two indexes are on different scales; compare predicted probability changes (15.8 vs. 14.9 points here) or average marginal effects.</p></div></div></details>
+  <details><summary>Adding credit history cut the LPM coefficient on black from 0.177 to 0.112. What does that tell you about credit history?</summary><div class="body"><div class="ans"><p>It was an omitted variable with upward bias: worse credit history raises denial (β₂ &gt; 0) and is more common among Black applicants in the sample (positive correlation with black). Positive × positive ⇒ the short regression overstated the race gap.</p></div></div></details>
+  <details><summary>Can you test H₀: β₁ = 0 in a probit with the usual z-statistic?</summary><div class="body"><div class="ans"><p>Yes. β̂₁/SE(β̂₁) compared with 1.96 (Stata prints z and P&gt;|z|). Sign and significance read straight off the output; only the <b>size</b> needs predicted probabilities.</p></div></div></details>
+</section>
+
 <section class="block" id="ahead">
   <p class="eyebrow">Next lecture <span class="pill warn">Preview</span></p>
-  <h2>Still to come: regression with a binary outcome</h2>
-  <p class="lede">The F-test, previewed here before the midterm, is now covered in <a href="#l12">Lecture 12, Stop 2</a>. Next up, per the Nov 4 slides: what to do when Y itself is a 0/1 variable. Reading: S&amp;W 11.1–11.2.</p>
+  <h2>Still to come: instrumental variables</h2>
+  <p class="lede">Lecture 13's open question was "what if something the loan officer sees isn't in the data?" Next time: what to do when the regressor is correlated with the error and we <b>can't measure</b> what's missing. Reading: S&amp;W 12.1.</p>
   <ul>
-    <li><b>The linear probability model:</b> regress a 0/1 outcome on X with OLS.</li>
-    <li><b>Probit and logit:</b> nonlinear alternatives.</li>
+    <li>When adding controls can't fix OVB because the omitted variable is unobserved.</li>
+    <li>The idea you've already seen in Lecture 6: effect = effect of the offer ÷ first stage.</li>
   </ul>
-  <div class="callout"><p><b>Syllabus check (Sep 7 version).</b> The class is running about one lecture behind the syllabus calendar: binary dependent variables were scheduled for Nov 4 and 9, then instrumental variables (S&amp;W 12) from Nov 11. Problem Set 3 is listed as posted Mon Nov 9, due Mon Nov 16. Final exam: Registrar's period Dec 17–23, covering <b>S&amp;W chs 10–14 and Mastering 'Metrics chs 3–5</b>. Grade = 0.1·PS + 0.4·min(MT, FI) + 0.5·max(MT, FI), so a strong final counts for more than the midterm.</p></div>
+  <div class="callout"><p><b>Syllabus check (Sep 7 version).</b> Problem Set 3 is listed as posted Mon Nov 9, due Mon Nov 16. Final exam: Registrar's period Dec 17–23, covering <b>S&amp;W chs 10–14 and Mastering 'Metrics chs 3–5</b>. Grade = 0.1·PS + 0.4·min(MT, FI) + 0.5·max(MT, FI), so a strong final counts for more than the midterm.</p></div>
 </section>
+
 <section class="block" id="ws">
   <p class="eyebrow">Answers</p>
   <h2>Worksheet solutions</h2>
@@ -1861,8 +2107,8 @@ Linear regression                       Number of obs =    420
 <section class="block quizbox" id="quiz">
   <p class="eyebrow">Practice</p>
   <h2>T/F quiz: every lecture, small details</h2>
-  <p class="lede">71 statements. Click True, False or Uncertain, then read why. Before you click, say the one-line reason out loud; on the exam the reason is what earns the points.</p>
-  <div class="qz-bar"><div class="qz-f"><button type="button" class="on" data-f="all">All</button><button type="button" data-f="L1">L1</button><button type="button" data-f="L2">L2</button><button type="button" data-f="L3">L3</button><button type="button" data-f="L4">L4</button><button type="button" data-f="L5">L5</button><button type="button" data-f="L6">L6</button><button type="button" data-f="L7">L7</button><button type="button" data-f="L8">L8</button><button type="button" data-f="L9">L9</button><button type="button" data-f="L10">L10</button><button type="button" data-f="L11">L11</button><button type="button" data-f="L12">L12</button></div><div class="qz-sc">Score: <b class="qz-score">0 / 0</b> <button type="button" class="qz-reset">Reset</button></div></div>
+  <p class="lede">80 statements. Click True, False or Uncertain, then read why. Before you click, say the one-line reason out loud; on the exam the reason is what earns the points.</p>
+  <div class="qz-bar"><div class="qz-f"><button type="button" class="on" data-f="all">All</button><button type="button" data-f="L1">L1</button><button type="button" data-f="L2">L2</button><button type="button" data-f="L3">L3</button><button type="button" data-f="L4">L4</button><button type="button" data-f="L5">L5</button><button type="button" data-f="L6">L6</button><button type="button" data-f="L7">L7</button><button type="button" data-f="L8">L8</button><button type="button" data-f="L9">L9</button><button type="button" data-f="L10">L10</button><button type="button" data-f="L11">L11</button><button type="button" data-f="L12">L12</button><button type="button" data-f="L13">L13</button></div><div class="qz-sc">Score: <b class="qz-score">0 / 0</b> <button type="button" class="qz-reset">Reset</button></div></div>
   <div class="qz" data-l="L1" data-a="F"><p class="qz-s"><span class="qz-n">L1 · 1</span> The Mozart study (36 college students, one spatial task, effect gone within 15 minutes) supports giving classical-music CDs to the parents of newborns.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. External validity fails three ways: different population (newborns vs. college students), different outcome (general intelligence vs. one spatial task), different horizon (lasting vs. 15 minutes).</p></div></div>
   <div class="qz" data-l="L1" data-a="F"><p class="qz-s"><span class="qz-n">L1 · 2</span> Internal validity asks whether a study&#x27;s results carry over to other people, places or times.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. That&#x27;s external validity. Internal validity asks whether the estimate is the causal effect for the people actually studied.</p></div></div>
   <div class="qz" data-l="L2" data-a="F"><p class="qz-s"><span class="qz-n">L2 · 3</span> If X and Y are independent, var(X − Y) = var(X) − var(Y).</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. Variances add even for a difference: var(X − Y) = var(X) + (−1)²var(Y) = var(X) + var(Y).</p></div></div>
@@ -1934,6 +2180,15 @@ Linear regression                       Number of obs =    420
   <div class="qz" data-l="L12" data-a="F"><p class="qz-s"><span class="qz-n">L12 · 69</span> In the quadratic pay model, the effect of one more year of age is β̂₁ at every age.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. Age² changes too. From age a to a + 1 the change is β̂₁ + β̂₂(2a + 1).</p></div></div>
   <div class="qz" data-l="L12" data-a="T"><p class="qz-s"><span class="qz-n">L12 · 70</span> With β₁ &gt; 0 and β₂ &lt; 0 in Y = β₀ + β₁X + β₂X², Y rises then falls, peaking at X = −β₁/(2β₂).</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. An upside-down parabola; set the slope β₁ + 2β₂X to zero.</p></div></div>
   <div class="qz" data-l="L12" data-a="F"><p class="qz-s"><span class="qz-n">L12 · 71</span> To test H₀: β₁ = β₂ = 0, run two t-tests at 5% and reject if either is significant.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. That rejects a true joint null more than 5% of the time. Use the F-test.</p></div></div>
+  <div class="qz" data-l="L13" data-a="T"><p class="qz-s"><span class="qz-n">L13 · 72</span> With a 0/1 outcome, the OLS regression line gives the predicted probability that Y = 1.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. E(Y | X) = 1·Pr(Y = 1 | X) + 0·Pr(Y = 0 | X) = Pr(Y = 1 | X). That's the linear probability model.</p></div></div>
+  <div class="qz" data-l="L13" data-a="F"><p class="qz-s"><span class="qz-n">L13 · 73</span> In an LPM, a coefficient of 0.02 means the probability rises by 2 percent.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. It rises by 2 percentage points. From 0.12 to 0.14 is +2 points but a 17% relative increase.</p></div></div>
+  <div class="qz" data-l="L13" data-a="T"><p class="qz-s"><span class="qz-n">L13 · 74</span> The linear probability model can predict probabilities below 0 or above 1.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. A straight line is unbounded. In the mortgage data, P/I = 0.1 gives −2% and P/I = 3.0 gives 173%.</p></div></div>
+  <div class="qz" data-l="L13" data-a="F"><p class="qz-s"><span class="qz-n">L13 · 75</span> In a probit, β̂₁ = 2.97 on P/I means a 0.1 increase in P/I raises the denial probability by 29.7 points.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. 2.97 is the change in the index z per unit of P/I. Compute Φ at both values and subtract: 0.3 → 0.4 gives +6.1 points.</p></div></div>
+  <div class="qz" data-l="L13" data-a="T"><p class="qz-s"><span class="qz-n">L13 · 76</span> In a probit, the same change in X can move the probability by different amounts depending on the starting X.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. z moves by the same β̂₁ΔX, but the area added depends on how tall the bell is there: +6.1 points for P/I 0.3 → 0.4, +11.4 for 0.6 → 0.7.</p></div></div>
+  <div class="qz" data-l="L13" data-a="F"><p class="qz-s"><span class="qz-n">L13 · 77</span> Since the logit coefficient on P/I (5.88) is about twice the probit one (2.97), logit finds a much bigger effect.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: False. Different index scales. In probabilities they nearly match: +6.4 vs. +6.1 points for P/I 0.3 → 0.4.</p></div></div>
+  <div class="qz" data-l="L13" data-a="T"><p class="qz-s"><span class="qz-n">L13 · 78</span> The sign and the z-statistic of a probit coefficient can be read straight from the output.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. Positive β̂ ⇒ probability rises with X; β̂/SE vs. 1.96 tests significance. Only the size needs predicted probabilities.</p></div></div>
+  <div class="qz" data-l="L13" data-a="U"><p class="qz-s"><span class="qz-n">L13 · 79</span> Holding P/I, credit history and loan characteristics fixed, Black applicants were 8.4 points more likely to be denied, so this proves discrimination.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: Uncertain. Strong evidence, but anything the loan officer saw that isn't in the data and differs by race on average would still be in u and bias β̂. Multiple regression only removes bias from included variables.</p></div></div>
+  <div class="qz" data-l="L13" data-a="T"><p class="qz-s"><span class="qz-n">L13 · 80</span> The probit marginal effect of X is largest where the predicted probability is near one half.</p><div class="qz-b"><button type="button" data-v="T">True</button><button type="button" data-v="F">False</button><button type="button" data-v="U">Uncertain</button></div><div class="qz-x" hidden><p><b class="qz-v"></b> Answer: True. The slope is φ(z)β₁, and the normal density φ is tallest at z = 0, i.e. Pr = Φ(0) = 0.5.</p></div></div>
 </section>
 
 <section class="block quizbox" id="wsquiz">
