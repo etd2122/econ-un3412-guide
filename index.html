@@ -218,7 +218,8 @@ details:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--rule))}
     <li><a href="#l11"><span class="n">L11</span>Multiple regression</a></li>
     <li><a href="#l12"><span class="n">L12</span>F-tests, interactions, polynomials</a></li>
     <li><a href="#l13"><span class="n">L13</span>Binary outcomes</a></li>
-    <li><a href="#ahead"><span class="n">→</span>Next: instrumental variables</a></li>
+    <li><a href="#l14"><span class="n">L14</span>Instrumental variables</a></li>
+    <li><a href="#ahead"><span class="n">→</span>Next: two-stage least squares</a></li>
   </ul>
   <h4>Answers</h4>
   <ul>
@@ -1331,7 +1332,7 @@ linearHypothesis(fit, c("mt = 0", "ms = 0"), white.adjust = "hc1")
 </section>
 
 <section class="block" id="l13">
-  <p class="eyebrow">Lecture 13 · Mon Nov 9 · Final material <span class="pill">New</span></p>
+  <p class="eyebrow">Lecture 13 · Mon Nov 9 · Final material</p>
   <h2>Binary outcomes: linear probability, probit and logit</h2>
   <p class="lede">Until now Y was an amount: earnings, pay, test scores. Today Y is a yes/no: was the mortgage denied? The big idea is that nothing new is needed to <i>run</i> the regression; what changes is how you <b>read</b> it. The regression line becomes a probability. Reading: S&amp;W 11.1, 11.2, 11.4.</p>
 
@@ -1573,13 +1574,237 @@ linearHypothesis(fit, c("mt = 0", "ms = 0"), white.adjust = "hc1")
   <details><summary>Can you test H₀: β₁ = 0 in a probit with the usual z-statistic?</summary><div class="body"><div class="ans"><p>Yes. β̂₁/SE(β̂₁) compared with 1.96 (Stata prints z and P&gt;|z|). Sign and significance read straight off the output; only the <b>size</b> needs predicted probabilities.</p></div></div></details>
 </section>
 
+<section class="block" id="l14">
+  <p class="eyebrow">Lecture 14 · Wed Nov 11 · Final material <span class="pill">New</span></p>
+  <h2>Instrumental variables</h2>
+  <p class="lede">Lecture 13 ended on the hole in every regression with controls: what if something that matters <b>isn't in the data</b>? Today's answer: find a variable that moves X for reasons that have nothing to do with u, and use only that part of X. The running question is whether one opioid prescription in the emergency room causes long-term use. Reading: S&amp;W 12.1; Mastering 'Metrics ch. 3; Eichmeyer &amp; Zhang (2022).</p>
+
+  <div class="journey">
+  <div class="stop"><p class="sl">Stop 1 · Is it the drug, or the cage?</p>
+    <p><b>Rat Park</b> (Bruce Alexander and colleagues, Simon Fraser University, 1978–81). Lab rats housed alone in small cages, offered morphine, kept taking it. In "Rat Park" (16–20 rats, 200 times the space, wheels, company), the same choice of water or sweetened morphine. Caged males drank up to <b>19 times</b> as much morphine.</p>
+    <p>The conclusion drawn: in the right environment, morphine isn't addictive. Doctors reached the same conclusion about patients in real pain under medical care:</p>
+    <ul>
+      <li><b>1980:</b> Porter &amp; Jick, a five-sentence letter to the NEJM: of 11,882 hospital patients given a narcotic, 4 with no history of addiction became addicted. Later cited 608 times.</li>
+      <li><b>1996:</b> OxyContin goes on sale; the sales force puts addiction risk at "less than one percent." Purdue Pharma pleaded guilty in 2007 to misleading the public about that risk.</li>
+      <li>More than <b>800,000</b> US opioid overdose deaths since 1999 (CDC WONDER). In 2016 the Surgeon General wrote to every doctor that many had been taught, incorrectly, that prescribed opioids aren't addictive.</li>
+    </ul>
+    <div class="plain"><p class="ph">Why this is an econometrics story</p><p>Alexander <b>chose</b> which rat got the cage: environment was randomly assigned. Doctors choose which patient gets a prescription, so prescribed patients differ from unprescribed ones in ways that also drive long-term use. That's selection bias (Lecture 5) again.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 2 · The regression and what's hiding in u</p>
+    <p>Emergency rooms prescribe opioids for ordinary pain (a broken wrist, a kidney stone, a bad back). Most patients stop after a few days; some keep getting new prescriptions from other doctors for six months or more.</p>
+    \[LongTerm_i=\beta_0+\beta_1 Prescribed_i+u_i\]
+    <ul>
+      <li>\(LongTerm_i\) = 1 if patient i is supplied opioids for <b>180+ days</b> in the next year.</li>
+      <li>\(Prescribed_i\) = 1 if patient i left the ER with a prescription.</li>
+      <li>β₁ is "the drug": the effect of a prescription on long-term use. u is "the cage": everything else that decides long-term use.</li>
+    </ul>
+    <p>OLS needs \(E(u_i\mid Prescribed_i)=0\): the same average u with and without a prescription.</p>
+    <details><summary>Slide question: name things in u that also go with getting a prescription.</summary><div class="body"><div class="ans">
+      <p>The three the slides go on to control for: the <b>diagnosis</b> (a broken bone vs. a headache), <b>age and other illnesses</b>, and the <b>pain score</b>. Sicker, older patients in more pain are more likely to get a prescription <i>and</i> more likely to keep using opioids for reasons other than that one prescription.</p>
+      <p>Each pushes prescriptions and long-term use in the <b>same direction</b>, so OVB is positive and OLS <b>overstates</b> β₁ (Lecture 10's sign rule: + × + = upward bias). The chart records all three, so we can control for them.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 3 · OLS, adding controls</p>
+    <p>A simulated ER with 2,000,000 visits, built to match Eichmeyer &amp; Zhang's (2022) regression.</p>
+<pre><code>regress longterm prescribed, robust
+regress longterm prescribed i.diagnosis, robust
+regress longterm prescribed i.diagnosis age illnesses, robust
+regress longterm prescribed i.diagnosis age illnesses pain, robust</code></pre>
+    <div class="tw"><table><tr><th></th><th>(1)</th><th>(2)</th><th>(3)</th><th>(4)</th></tr>
+    <tr><th>Prescribed</th><td>5.5<br><span class="small">(0.05)</span></td><td>4.8<br><span class="small">(0.05)</span></td><td>3.5<br><span class="small">(0.05)</span></td><td><b>2.6</b><br><span class="small">(0.05)</span></td></tr>
+    <tr><th>Diagnosis</th><td></td><td>✓</td><td>✓</td><td>✓</td></tr>
+    <tr><th>Age, other illnesses</th><td></td><td></td><td>✓</td><td>✓</td></tr>
+    <tr><th>Pain score</th><td></td><td></td><td></td><td>✓</td></tr></table></div>
+    <p class="small">Percentage points of long-term use. Robust standard errors. <code>i.diagnosis</code> adds a dummy for each diagnosis.</p>
+    <details><summary>Slide question: what happens to the coefficient as controls go in, and why?</summary><div class="body"><div class="ans">
+      <p>It <b>falls</b> every time: 5.5 → 4.8 → 3.5 → 2.6. Each control was an omitted variable positively related to both the prescription and long-term use, so leaving it out biased β̂₁ <b>upward</b>. Adding it removes that piece of the bias (same pattern as the mortgage table in Lecture 13).</p>
+      <p>The worrying part: it never levels off. If every measured variable lowered the estimate, the <b>unmeasured</b> ones probably would too. The SEs are tiny (2 million visits), but that only means we're precisely estimating a biased number.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 4 · Why controls aren't enough: three ways X ends up correlated with u</p>
+    <p><b>Reason 1: omitted variables nobody measures.</b> The doctor sees more than the chart records. Call it W ("what the doctor saw"). W decides the prescription and predicts long-term use, but no control can hold W fixed. The OVB formula from Lecture 10:</p>
+    \[\hat\beta_1\xrightarrow{p}\beta_1+\beta_2\,\frac{\operatorname{cov}(X,W)}{\operatorname{var}(X)}\]
+    <p class="small">Same problem: ability in pay vs. schooling; parents' involvement in test scores vs. class size.</p>
+
+    <p><b>Reason 2: reverse causality.</b> Regress crime on police across cities. β₁ is what one more officer does to crime (police reduce crime). But cities with more crime <b>hire more police</b>: a bad crime year is a high u, and it brings police, so X moves with u. OLS mixes the two arrows.</p>
+    <p class="small">Same problem: price and quantity sold; income and health.</p>
+
+    <p><b>Reason 3: measurement error in X.</b> What we record is the truth plus noise: \(X_i^*=X_i+v_i\). Regressing Y on the recorded X*:</p>
+    \[Y_i=\beta_0+\beta_1X_i^*+\underbrace{(u_i-\beta_1v_i)}_{\text{contains }v_i\text{, a part of }X_i^*}\]
+    <p>The error now contains part of the regressor, so they're correlated. The slope shrinks toward zero (<b>attenuation bias</b>):</p>
+    \[\hat\beta_1\xrightarrow{p}\beta_1\cdot\frac{\sigma_X^2}{\sigma_X^2+\sigma_v^2}\]
+    <p>Noise as large as the signal (\(\sigma_v^2=\sigma_X^2\)) <b>halves</b> it.</p>
+
+    <div class="callout"><p><b>The same problem each time:</b> \(E(u_i\mid X_i)\neq0\). OLS doesn't estimate β₁, and <b>more data don't help</b> (bias isn't sampling noise). Controls fix only what we can measure. The idea: use only the variation in X that is unrelated to u.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 5 · What is an instrument?</p>
+    <p>A third variable Z that <b>moves X</b> and has <b>nothing to do with u</b>. The part of X that moves with Z is as good as randomly assigned, and that's enough to measure β₁.</p>
+    <ul>
+      <li><b>Z</b> is the <b>instrument</b> for X.</li>
+      <li><b>X</b> is <b>endogenous</b> (correlated with u).</li>
+      <li><b>Z</b> is <b>exogenous</b> (uncorrelated with u).</li>
+    </ul>
+    <figure style="margin:12px 0">
+<svg viewBox="0 0 360 206" width="360" height="206" role="img" aria-label="Instrument diagram: Z points to X (relevance), X points to Y with effect beta 1, u points to both X and Y. Crossed-out dashed links from Z to u (as good as random) and from Z directly to Y (exclusion)" style="max-width:100%;height:auto">
+<defs><marker id="l14a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>
+<path d="M64,128 Q120,40 222,40" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="114" y="66" text-anchor="middle" font-size="13" fill="var(--fixc)" font-weight="700">×</text>
+<text x="88" y="98" font-size="11" fill="var(--muted)">as good as random</text>
+<path d="M60,158 Q170,200 300,158" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<text x="176" y="183" text-anchor="middle" font-size="13" fill="var(--fixc)" font-weight="700">×</text>
+<text x="180" y="201" text-anchor="middle" font-size="11" fill="var(--muted)">exclusion</text>
+<line x1="230" y1="52" x2="172" y2="124" stroke="var(--tip)" stroke-width="2" marker-end="url(#l14a)"/>
+<line x1="250" y1="52" x2="296" y2="124" stroke="var(--tip)" stroke-width="2" marker-end="url(#l14a)"/>
+<line x1="62" y1="142" x2="146" y2="142" stroke="var(--ok)" stroke-width="2.5" marker-end="url(#l14a)"/>
+<text x="104" y="134" text-anchor="middle" font-size="11" fill="var(--ok)">relevance</text>
+<line x1="176" y1="142" x2="288" y2="142" stroke="var(--accent)" stroke-width="2.5" marker-end="url(#l14a)"/>
+<text x="232" y="134" text-anchor="middle" font-size="11" fill="var(--accent)">β₁</text>
+<circle cx="44" cy="142" r="17" fill="var(--ok-soft)" stroke="var(--ok)" stroke-width="1.5"/><text x="44" y="147" text-anchor="middle" font-size="14" font-style="italic" fill="var(--ink)">Z</text>
+<circle cx="160" cy="142" r="17" fill="var(--surface)" stroke="var(--muted)" stroke-width="1.5"/><text x="160" y="147" text-anchor="middle" font-size="14" font-style="italic" fill="var(--ink)">X</text>
+<circle cx="306" cy="142" r="17" fill="var(--surface)" stroke="var(--muted)" stroke-width="1.5"/><text x="306" y="147" text-anchor="middle" font-size="14" font-style="italic" fill="var(--ink)">Y</text>
+<circle cx="240" cy="38" r="17" fill="var(--surface)" stroke="var(--muted)" stroke-width="1.5"/><text x="240" y="43" text-anchor="middle" font-size="14" font-style="italic" fill="var(--ink)">u</text>
+</svg>
+    <figcaption class="small">u reaches both X and Y, so the correlation of X and Y doesn't give β₁. Z reaches Y <b>only</b> through X, so any movement in Y that follows Z travelled through X. That is what we measure.</figcaption></figure>
+    <div class="tw"><table><tr><th>1. Relevance: Z moves X</th><th>2. Exogeneity: Z is unrelated to u</th></tr>
+    <tr><td>\(\operatorname{cov}(Z_i,X_i)\neq0\)</td><td>\(\operatorname{cov}(Z_i,u_i)=0\)</td></tr>
+    <tr><td><b>Testable.</b> Regress X on Z and look at the slope. This regression is the <b>first stage</b>.</td><td>u holds every cause of Y other than X, so a direct effect of Z on Y would be in u. Exogeneity therefore needs <b>both</b>: (a) Z <b>as good as random</b>, and (b) the <b>exclusion restriction</b>: Z reaches Y only through X.</td></tr>
+    <tr><td></td><td><b>Not testable:</b> u is unobserved. Both parts have to be <b>argued</b>.</td></tr></table></div>
+    <div class="tip"><p>On any "is Z a valid instrument?" question, check three things out loud, in this order: <b>relevance</b> (does Z move X? first stage), <b>as good as random</b> (is Z unrelated to other causes of Y?), <b>exclusion</b> (can Z affect Y through any channel other than X?). Most exam instruments fail on exclusion.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 6 · Can an earthquake tell us what class size does?</p>
+    <p>An earthquake closes some California schools. Nearby schools take in their students, and their classes grow.</p>
+    <div class="tw"><table><tr><th>Outcome Y</th><th>Endogenous X</th><th>Instrument Z</th></tr>
+    <tr><td>test scores</td><td>class size</td><td>near the epicenter</td></tr></table></div>
+    <details><summary>Slide question (discuss, 5 min): is the earthquake a good instrument for class size?</summary><div class="body"><div class="ans">
+      <p><b>Relevance:</b> plausibly yes. Schools near the epicenter absorb displaced students, so classes grow. Checkable in the first stage.</p>
+      <p><b>As good as random:</b> partly. The timing and location of an earthquake are random, but areas near fault lines might differ (older buildings, income) — you'd want to compare similar schools.</p>
+      <p><b>Exclusion: the big problem.</b> An earthquake affects test scores through many channels besides class size: trauma and stress, damaged homes, lost school days, families moving away, and the <b>displaced students themselves</b> joining the class (different peers). All of these are in u and move with Z, so cov(Z, u) ≠ 0. Probably <b>not</b> a valid instrument.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 7 · The KIPP lottery: the setup</p>
+    <p>Lynn, Massachusetts, fifth-grade math scores in standard deviations from the state average: Lynn public schools <b>−0.363σ</b>, KIPP Lynn <b>+0.095σ</b>. A gap of <b>0.46σ</b>. KIPP Lynn is a "No Excuses" charter middle school: long days, a longer year, strict discipline.</p>
+    <details><summary>Slide question: is the gap the effect of attending KIPP?</summary><div class="body"><div class="ans"><p>No. Families who apply to a demanding charter are not a random sample (motivation, parental involvement), so the gap = causal effect + selection bias. Those differences are in u and correlated with attending.</p></div></div></details>
+    <p>KIPP had more applicants than seats, and by Massachusetts law filled them <b>by lottery</b>. Applicants for 5th- and 6th-grade seats, 2005–2008 (MM Figure 3.1):</p>
+    <div class="tw"><table><tr><th>Stage</th><th>Offered a seat</th><th>Not offered</th></tr>
+    <tr><td>629 applicants → 446 in a lottery (first application)</td><td>303</td><td>143</td></tr>
+    <tr><td>Attended KIPP</td><td>221 (73%)</td><td>5 (3.5%)</td></tr></table></div>
+    <details><summary>Slide question: winning is a coin flip. What can we learn by comparing winners and losers?</summary><div class="body"><div class="ans"><p>The causal effect of <b>winning</b> (being offered a seat), because the coin flip makes winners and losers alike on average. But the offer isn't the treatment: about a quarter of winners went elsewhere, and a few losers got in anyway. So winners vs. losers is the effect of the offer, not of attending.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 8 · Balance, then outcomes</p>
+    <p class="small">MM Table 3.1. 371 lottery applicants with test scores.</p>
+    <div class="tw"><table><tr><th></th><th>Lynn 5th graders</th><th>Lottery winners</th><th>Winners − losers</th><th>SE</th><th>t</th></tr>
+    <tr><th>Hispanic</th><td>0.418</td><td>0.510</td><td>−0.058</td><td>0.058</td><td>−1.00</td></tr>
+    <tr><th>Black</th><td>0.173</td><td>0.257</td><td>0.026</td><td>0.047</td><td>0.55</td></tr>
+    <tr><th>Free/reduced lunch</th><td>0.770</td><td>0.814</td><td>−0.032</td><td>0.046</td><td>−0.70</td></tr>
+    <tr><th>4th-grade math</th><td>−0.307</td><td>−0.290</td><td>0.102</td><td>0.120</td><td>0.85</td></tr>
+    <tr><th>n</th><td>3,964</td><td>253</td><td>371</td><td></td><td></td></tr></table></div>
+    <details><summary>Slide question: what should the t-statistics look like if the lottery is fair?</summary><div class="body"><div class="ans"><p>Mostly |t| &lt; 1.96: differences no bigger than sampling noise. With many characteristics, about 1 in 20 could exceed 1.96 by chance alone. Here all four are under 1.1, so winners and losers look alike before the lottery. (Balance checks only <b>observed</b> traits; randomization balances unobservables in expectation.)</p></div></div></details>
+    <div class="tw"><table><tr><th></th><th>Winners</th><th>Losers</th><th>Winners − losers</th><th>SE</th><th>t</th></tr>
+    <tr><th>Attended KIPP</th><td>0.787</td><td>0.046</td><td><b>0.741</b></td><td>0.037</td><td>20.0</td></tr>
+    <tr><th>Math score</th><td>−0.003</td><td>−0.358</td><td><b>0.355</b></td><td>0.115</td><td>3.09</td></tr></table></div>
+    <details><summary>Slide question: winners score 0.355σ higher than losers. Is that the effect of attending KIPP?</summary><div class="body"><div class="ans"><p>No, it's the effect of <b>winning</b> (the reduced form / intent-to-treat). Not every winner attended (78.7%) and a few losers did (4.6%), so the 0.355 is diluted: it averages the effect of attending over winners who went and winners who didn't.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 9 · The lottery is an instrument</p>
+    <p>\(Z_i\) = won the lottery, \(X_i\) = attended KIPP, \(Y_i\) = math score.</p>
+    <ul>
+      <li><b>Relevance:</b> winning raises attendance by 0.741 (SE 0.037, t = 20).</li>
+      <li><b>As good as random:</b> it's a lottery, and the balance table agrees.</li>
+      <li><b>Exclusion:</b> winning changes a child's score only by changing whether she attends KIPP.</li>
+    </ul>
+    <details><summary>Slide question: how could exclusion fail here?</summary><div class="body"><div class="ans"><p>If winning or losing affects scores <b>directly</b>, not through attendance. Examples: losers feel discouraged and try less (or parents compensate with tutoring); losing pushes families toward <b>another</b> charter or private school; winners who decline still change behavior because of the offer. Any such channel puts Z in u.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 10 · Deriving the IV estimator, step by step</p>
+    <ol>
+      <li>Start from \(Y_i=\beta_0+\beta_1X_i+u_i\). Take the population average separately for winners (Z = 1) and losers (Z = 0):
+      \[E(Y_i\mid Z_i=1)=\beta_0+\beta_1E(X_i\mid Z_i=1)+E(u_i\mid Z_i=1)\]
+      \[E(Y_i\mid Z_i=0)=\beta_0+\beta_1E(X_i\mid Z_i=0)+E(u_i\mid Z_i=0)\]</li>
+      <li>Subtract. β₀ cancels:
+      \[E(Y\mid Z{=}1)-E(Y\mid Z{=}0)=\beta_1\big[E(X\mid Z{=}1)-E(X\mid Z{=}0)\big]+\underbrace{E(u\mid Z{=}1)-E(u\mid Z{=}0)}_{=0\text{ by exogeneity}}\]
+      Winners and losers have the same u on average: that's what "as good as random" <i>and</i> "only through X" buy us.</li>
+      <li>Solve for β₁:
+      \[\beta_1=\frac{E(Y\mid Z{=}1)-E(Y\mid Z{=}0)}{E(X\mid Z{=}1)-E(X\mid Z{=}0)}=\frac{\gamma_1}{\pi_1}=\frac{\text{reduced form}}{\text{first stage}}\]</li>
+      <li>With a binary Z, each difference in means is the slope of a regression on Z:
+      \[\text{Reduced form: }Y_i=\gamma_0+\gamma_1Z_i+w_i\qquad\text{First stage: }X_i=\pi_0+\pi_1Z_i+e_i\]</li>
+    </ol>
+    <div class="callout"><p>The <b>Wald estimator</b> uses sample averages: \(\hat\beta_1=\hat\gamma_1/\hat\pi_1\). <b>Relevance is the condition \(\pi_1\neq0\)</b>: the denominator isn't zero. This is the same "effect of the offer ÷ first stage" from Lecture 6.</p></div>
+    \[\hat\beta_1=\frac{\hat\gamma_1}{\hat\pi_1}=\frac{0.355\ \ (\text{math score, winners − losers})}{0.741\ \ (\text{attendance, winners − losers})}=\mathbf{0.48\sigma}\]
+    <p>Attending KIPP raises math scores by about <b>half a standard deviation</b> in one year. In Stata, the ratio and its SE in one line:</p>
+<pre><code>ivregress 2sls score (attended = won)</code></pre>
+    <p class="small">Syntax: outcome, then (endogenous X = instrument Z) in parentheses.</p>
+    <details><summary>Slide question: why is the effect of attending (0.48σ) larger than the effect of winning (0.355σ)?</summary><div class="body"><div class="ans"><p>Winning only raises attendance by 0.741, not by 1. The effect of winning = 0.741 × effect of attending, so the 0.355 is the attending effect diluted by the 26% of the gap that didn't switch schools. Dividing by the first stage undoes that dilution. The smaller the first stage, the bigger the scale-up.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 11 · Back to the ER: which doctor you get is luck</p>
+    <p>Eichmeyer &amp; Zhang (2022): <b>1,879,150</b> ER visits by US veterans, 2006–2016.</p>
+    <ul>
+      <li>In an ER you're seen by whoever is on shift.</li>
+      <li>Doctors in the same hospital, on the same shifts, differ in how readily they prescribe. Top quarter = <b>lenient</b>, bottom quarter = <b>strict</b>.</li>
+      <li>A lenient doctor's patient is about <b>17 points</b> more likely to leave with an opioid prescription.</li>
+      <li>The two groups of patients look alike when they arrive.</li>
+    </ul>
+    <div class="tw"><table><tr><th></th><th>Lenient doctor</th><th>Strict doctor</th><th>Difference</th></tr>
+    <tr><th>Left with an opioid prescription</th><td colspan="2">more often with a lenient doctor</td><td>≈ 17 points</td></tr>
+    <tr><th>Long-term opioid use</th><td>5.90%</td><td>5.69%</td><td>0.21 points</td></tr></table></div>
+    <p class="small">Long-term use: 180+ days of opioids supplied in the 12 months after the visit.</p>
+    <details><summary>Slide question: what are Z, X and Y? Compute the effect of a prescription on long-term use.</summary><div class="body"><div class="ans">
+      <p><b>Z</b> = seen by a lenient doctor; <b>X</b> = left with an opioid prescription; <b>Y</b> = long-term use.</p>
+      <p>Reduced form \(\hat\gamma_1\) = 0.21 points; first stage \(\hat\pi_1\) = 17 points = 0.17.</p>
+      <p>\(\hat\beta_1=0.21/17\approx0.012\), i.e. one prescription raises the probability of long-term use by about <b>1.2 percentage points</b>. (Units: points ÷ points is a ratio, so read 0.21/0.17 = 1.2 points per prescription.)</p></div></div></details>
+    <details><summary>Slide question: is the doctor on shift a valid instrument? How could exclusion fail?</summary><div class="body"><div class="ans">
+      <p><b>Relevance:</b> yes, +17 points in the first stage. <b>As good as random:</b> patients don't choose who's on shift, and the groups look alike on arrival.</p>
+      <p><b>Exclusion</b> fails if the doctor affects long-term use through something <b>other than that first opioid prescription</b>: e.g. lenient doctors write <b>bigger</b> prescriptions (more pills/days), prescribe other drugs, give different advice, or refer patients to follow-up care differently. Any of those channels would be in u and correlated with Z.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 12 · What the controls missed, and the deaths</p>
+    <p class="small">Eichmeyer &amp; Zhang (2022). Instrument: each doctor's prescribing rate with <i>other</i> patients.</p>
+    <div class="tw"><table><tr><th>Effect of a prescription on long-term use</th><th>Estimate (SE)</th></tr>
+    <tr><td>Regression with controls</td><td>2.6 points (0.06)</td></tr>
+    <tr><td>Instrumental variables</td><td><b>1.3 points (0.21)</b></td></tr></table></div>
+    <details><summary>Slide question: why is the regression estimate twice as large?</summary><div class="body"><div class="ans">
+      <p>Selection on what the chart doesn't record (Reason 1, W). Doctors give prescriptions to patients they judge to need them, and those patients would be more likely to use opioids long-term anyway. W is in u and positively correlated with Prescribed, so OLS is biased <b>upward</b> even with controls. IV uses only the luck-of-the-shift variation, which is unrelated to W. <b>Half the regression estimate was selection.</b></p>
+      <p>Note the trade-off: IV's SE (0.21) is much larger than OLS's (0.06). IV uses only the part of X that moves with Z, so it throws away information. Unbiased but noisier.</p></div></div></details>
+    <p><b>Overdose deaths</b> within three years of the visit, per 100,000 patients: average rate among all ER patients <b>167</b>; added by one prescription (IV, doctor on shift) <b>+74</b>, i.e. 44% of the average rate.</p>
+    <details><summary>Slide question: the SE of the 74 is 34. What is the 95% confidence interval?</summary><div class="body"><div class="ans">
+      <p>74 ± 1.96 × 34 = 74 ± 66.6 → <b>[7.4, 140.6]</b> deaths per 100,000.</p>
+      <p>It excludes 0 (t = 74/34 ≈ 2.18 &gt; 1.96), so the effect is significant at 5%, but very imprecise: anywhere from a small effect to almost doubling the death rate.</p></div></div></details>
+  </div>
+  </div>
+
+  <div class="mine"><p class="mh">What to remember</p><ul>
+    <li>Unmeasured omitted variables, reverse causality and measurement error are <b>one problem</b>: X is correlated with u, and controls can't fix it.</li>
+    <li>An instrument Z moves X (<b>relevance</b>) and is unrelated to u (<b>exogeneity</b>: as good as random, and no path to Y except through X).</li>
+    <li>Relevance can be checked in the first stage. Exclusion can't be checked; it's argued, case by case.</li>
+    <li>With a binary instrument, \(\hat\beta_1\) = reduced form ÷ first stage. KIPP: 0.355/0.741 = 0.48σ. Opioids: 0.21/17 = 1.2 points.</li>
+    <li>Veterans and opioids: regression with controls 2.6 points, IV 1.3. Half the regression estimate was selection.</li>
+  </ul></div>
+
+  <div class="trap"><p>(1) Saying "we can test exogeneity" — you can't; u is unobserved. (2) Reporting the reduced form (0.355) as the treatment effect. (3) Thinking a huge sample fixes endogeneity — it only makes the biased estimate more precise. (4) Measurement error in <b>X</b> biases toward zero; noise in Y just adds variance (it goes into u, uncorrelated with X).</p></div>
+
+  <h3>Concept checks</h3>
+  <details><summary>An instrument has a first stage of exactly 0. What happens to the IV estimate?</summary><div class="body"><div class="ans"><p>It's undefined: you divide by π₁ = 0. Relevance fails, so Z carries no information about X. A first stage near 0 (a <b>weak</b> instrument) makes the ratio explode and very noisy; that's next lecture's first-stage F.</p></div></div></details>
+  <details><summary>Why can relevance be tested but exclusion can't?</summary><div class="body"><div class="ans"><p>Relevance is about cov(Z, X), and both are observed: run the first stage. Exclusion is about cov(Z, u), and u is never observed, so it has to be argued from how Z was assigned and what else it could affect.</p></div></div></details>
+  <details><summary>Income is measured with noise equal in variance to true income. You regress health on recorded income and get 0.4. What's your best guess of the true slope?</summary><div class="body"><div class="ans"><p>Attenuation factor σ²_X/(σ²_X + σ²_v) = ½, so plim β̂ = β/2 and β ≈ <b>0.8</b>. Measurement error in X shrinks the slope toward zero.</p></div></div></details>
+  <details><summary>Regress crime on police. Which way is OLS likely biased, and why?</summary><div class="body"><div class="ans"><p>Toward a <b>less negative</b> (even positive) coefficient. High-crime cities hire more police, so high u comes with high X: cov(X, u) &gt; 0. That pushes β̂₁ up, masking the true negative effect of police on crime.</p></div></div></details>
+  <details><summary>In the KIPP example, what's the first stage, the reduced form, and the IV estimate?</summary><div class="body"><div class="ans"><p>First stage: winners − losers in attendance = 0.741. Reduced form: winners − losers in math score = 0.355σ. IV (Wald): 0.355/0.741 = 0.48σ.</p></div></div></details>
+  <details><summary>A proposed instrument for the effect of schooling on earnings: distance to the nearest college. Check the conditions.</summary><div class="body"><div class="ans"><p><b>Relevance:</b> plausible (closer → cheaper → more schooling), checkable. <b>As good as random:</b> doubtful; families near colleges tend to be urban and richer, which affects earnings. <b>Exclusion:</b> doubtful; living near a college may mean a stronger local labor market that raises earnings directly. You'd have to argue both, probably with controls.</p></div></div></details>
+  <details><summary>Why is the IV standard error (0.21) so much bigger than the OLS one (0.06) in the opioid study?</summary><div class="body"><div class="ans"><p>IV uses only the variation in prescriptions caused by the doctor on shift (a 17-point shift), not all the variation in X. Less variation used → less precise. You trade bias for variance.</p></div></div></details>
+  <details><summary>Does "more data" fix OLS when E(u | X) ≠ 0?</summary><div class="body"><div class="ans"><p>No. OLS converges to β₁ + bias, not β₁. More data shrink the SE around the wrong number (the 2-million-visit simulation has SE 0.05 on a biased 5.5).</p></div></div></details>
+</section>
+
 <section class="block" id="ahead">
   <p class="eyebrow">Next lecture <span class="pill warn">Preview</span></p>
-  <h2>Still to come: instrumental variables</h2>
-  <p class="lede">Lecture 13's open question was "what if something the loan officer sees isn't in the data?" Next time: what to do when the regressor is correlated with the error and we <b>can't measure</b> what's missing. Reading: S&amp;W 12.1.</p>
+  <h2>Still to come: two-stage least squares</h2>
+  <p class="lede">Lecture 14 built IV from a single binary instrument with no controls: reduced form ÷ first stage. Next time generalizes it. Reading: S&amp;W 12.2 and 12.3.</p>
   <ul>
-    <li>When adding controls can't fix OVB because the omitted variable is unobserved.</li>
-    <li>The idea you've already seen in Lecture 6: effect = effect of the offer ÷ first stage.</li>
+    <li><b>Two-stage least squares (2SLS):</b> instruments with controls, and standard errors.</li>
+    <li>Does economic hardship cause civil war? <b>Rainfall</b> as an instrument, in Stata.</li>
+    <li><b>Weak instruments</b> and the first-stage F.</li>
   </ul>
   <div class="callout"><p><b>Syllabus check (Sep 7 version).</b> Problem Set 3 is listed as posted Mon Nov 9, due Mon Nov 16. Final exam: Registrar's period Dec 17–23, covering <b>S&amp;W chs 10–14 and Mastering 'Metrics chs 3–5</b>. Grade = 0.1·PS + 0.4·min(MT, FI) + 0.5·max(MT, FI), so a strong final counts for more than the midterm.</p></div>
 </section>
