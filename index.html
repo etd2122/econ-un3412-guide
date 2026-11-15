@@ -226,6 +226,7 @@ details:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--rule))}
     <li><a href="#ws">Worksheets</a></li>
     <li><a href="#rec">Recitations</a></li>
     <li><a href="#ps">Problem set guide</a></li>
+    <li><a href="#ps3">Problem Set 3</a></li>
   </ul>
   <h4>Practice</h4>
   <ul>
@@ -2097,6 +2098,263 @@ regress longterm prescribed i.diagnosis age illnesses pain, robust</code></pre>
   <tr><td>8. Log models</td><td>Identify linear-log, log-linear, log-log and read β₁</td><td><a href="#l8">L8</a></td><td>1% → \(0.01\beta_1\) units; 1 unit → \(100\beta_1\)%; 1% → \(\beta_1\)%</td></tr>
   </table></div>
   <div class="tip"><p>For any "interpret" question, use this sentence: "<i>Units</i> with one more <i>unit of X</i> have, on average, <i>β̂₁ units of Y</i> more." Then add whether it is causal and why (is E[u | X] = 0 plausible?).</p></div>
+</section>
+
+<section class="block" id="ps3">
+  <p class="eyebrow">Problem Set 3 · due Mon Nov 16 <span class="pill">New</span></p>
+  <h2>Problem Set 3: multiple regression, binary outcomes, instruments</h2>
+  <p class="lede">Each problem starts with a concept check (what's being tested, which lecture taught it, the formula you need). Answers sit behind the dropdowns, built from the lecture notes on this page. Try each part before you open the answer. All numbers use robust SEs (Stata <code>, robust</code> / R HC1).</p>
+  <div class="callout"><p><b>Before you submit.</b> The PS wants the command and output pasted under each answer, plus the full do-file, so run everything yourself. Your numbers should match these to the digits shown (Problem 3 is a simulation, so yours will differ slightly in the 2nd–3rd decimal). The PS also asks you to <b>state if you used AI and what for</b>.</p></div>
+
+  <h3>Problem 1 · Campaign spending and election outcomes</h3>
+  <div class="tw"><table>
+  <tr><th>Part</th><th>Concept being tested</th><th>Where taught</th><th>Formulas / tools</th></tr>
+  <tr><td>1–2</td><td>Interpreting a slope with units; how rescaling X changes β̂</td><td><a href="#l7">L7</a>, <a href="#l8">L8</a></td><td>X ÷ c ⇒ β̂ × c; t, R² unchanged</td></tr>
+  <tr><td>3(a)–(b)</td><td>Omitted variable bias as an exact identity in the sample</td><td><a href="#l10">L10</a>, <a href="#l11">L11</a></td><td>\(\tilde\beta_1=\hat\beta_1+\hat\beta_2\,\frac{\widehat{\mathrm{cov}}(X,W)}{\widehat{\mathrm{var}}(X)}\)</td></tr>
+  <tr><td>3(c)–(d), 4</td><td>"Holding fixed" interpretation; R²</td><td><a href="#l11">L11</a></td><td>\(R^2=1-SSR/TSS\)</td></tr>
+  <tr><td>5</td><td>Perfect multicollinearity</td><td><a href="#l11">L11</a> Stop 5</td><td>total = expendA + expendB</td></tr>
+  <tr><td>6–8</td><td>Linear probability model; predictions outside [0, 1]; fraction correctly predicted</td><td><a href="#l13">L13</a> Stops 2–5</td><td>β̂ = change in Pr in percentage points; \(\hat p&gt;0.5\Rightarrow\) predict a win</td></tr>
+  <tr><td>9–10</td><td>Probit and logit: reading coefficients; average marginal effects</td><td><a href="#l13">L13</a> Stops 6–9</td><td>AME \(=\frac1n\sum g(\hat z_i)\hat\beta\); <code>margins, dydx()</code></td></tr>
+  </table></div>
+<pre><code>use elections, clear
+regress voteA expendA, robust
+generate expendA100 = expendA/100          // $100,000s
+regress voteA expendA100, robust
+regress voteA expendA shareA, robust
+correlate expendA shareA, covariance
+generate total_expend = expendA + expendB
+regress voteA expendA expendB total_expend, robust
+generate winA = voteA &gt; 50
+generate diffSpend = expendA - expendB
+regress winA diffSpend expendA prtystrA democA, robust
+predict phat
+scatter winA phat
+list state district voteA phat if phat &lt; 0 | phat &gt; 1
+generate correct = (phat &gt; .5 &amp; winA==1) | (phat &lt;= .5 &amp; winA==0)
+summarize correct
+probit winA diffSpend expendA prtystrA democA, vce(robust)
+predict phat_probit
+margins, dydx(diffSpend)
+logit winA diffSpend expendA prtystrA democA, vce(robust)
+predict phat_logit
+margins, dydx(diffSpend)</code></pre>
+
+  <details><summary>1. Regress voteA on expendA. Interpret the coefficient.</summary><div class="body"><div class="ans">
+    <p>\(\widehat{voteA}=43.17+0.0236\,expendA\), robust SE 0.0048, t = 4.91, R² = 0.156.</p>
+    <p>expendA is in $1000s, so each extra <b>$1,000</b> spent by A goes with a <b>0.024 percentage point</b> higher vote share, on average. Significant, but not causal: strong candidates attract money (reverse causality, <a href="#l14">L14</a>), and candidate quality is in u.</p></div></div></details>
+  <details><summary>2. Rescale expenditures.</summary><div class="body"><div class="ans">
+    <p>Measure in <b>$100,000s</b> (expendA / 100). Dividing X by 100 multiplies the slope by 100: <b>2.36 points per $100,000</b>. The intercept, SE-based t-stat, p-value and R² don't change; only the units of β̂₁ do.</p></div></div></details>
+  <details><summary>3(a). Add shareA. What happens to the coefficient on expendA?</summary><div class="body"><div class="ans">
+    <p>\(\widehat{voteA}=27.09-0.0024\,expendA+0.473\,shareA\). The expendA coefficient falls from <b>0.0236 to −0.0024</b>, changes sign, and is no longer significant (SE 0.0017, t = −1.42).</p></div></div></details>
+  <details><summary>3(b). Explain with the OVB formula, and check it with numbers.</summary><div class="body"><div class="ans">
+    <p><b>Why:</b> in regression 1, shareA was in u. It raises vote share (β̂₂ = 0.473 &gt; 0) and is positively correlated with expendA (candidates who spend more have a bigger share). Positive × positive ⇒ upward bias (<a href="#l10">L10</a> sign table).</p>
+    <p><b>Numbers:</b> cov(expendA, shareA) = 4,343.03; var(expendA) = 78,952.78; ratio = 0.05501.</p>
+    \[\underbrace{0.02360}_{\text{part 1}}=\underbrace{-0.00243}_{\text{part 3}}+\underbrace{0.47323}_{\hat\beta_2}\times0.05501=-0.00243+0.02603\ \checkmark\]
+    <p>In the sample this is an <b>exact</b> identity (the ratio is the slope from regressing shareA on expendA), so it matches to every digit.</p></div></div></details>
+  <details><summary>3(c). Interpret the coefficient on shareA.</summary><div class="body"><div class="ans"><p>Holding A's dollar spending fixed, a <b>1 percentage point</b> larger share of total spending goes with a <b>0.47 point</b> higher vote share (t = 32.4). E.g. going from 50% to 60% of the money: about +4.7 points.</p></div></div></details>
+  <details><summary>3(d). What proportion of the variation is explained?</summary><div class="body"><div class="ans"><p>R² = <b>0.857</b>: 85.7% of the variation in voteA (adjusted R² 0.856), up from 15.6% with expendA alone.</p></div></div></details>
+  <details><summary>4. Amount spent vs. spending relative to the opponent.</summary><div class="body"><div class="ans"><p>Once relative spending (shareA) is held fixed, the dollar amount adds nothing (−0.0024, insignificant). What goes with winning votes is spending <b>relative</b> to the opponent. Caveat: still associations, not causal effects. Expected winners may raise more money, so shareA itself is probably endogenous.</p></div></div></details>
+  <details><summary>5. voteA on expendA, expendB and total_expend: good idea?</summary><div class="body"><div class="ans">
+    <p><b>No.</b> total_expend = expendA + expendB exactly, so the three regressors are <b>perfectly multicollinear</b> (<a href="#l11">L11</a> Stop 5). "Raise expendA holding expendB and the total fixed" is impossible, and OLS would need to divide by zero.</p>
+    <p>What the software does: Stata drops one variable with a note "<i>omitted because of collinearity</i>" (it drops total_expend, the last one listed); R's <code>lm</code> reports <code>NA</code> for total_expend. The remaining estimates are just the regression on expendA and expendB.</p></div></div></details>
+  <details><summary>6. LPM of winA on diffSpend, expendA, prtystrA, democA.</summary><div class="body"><div class="ans">
+    <p>winA = 1 in 83 of 173 races (4 races at exactly 50% are coded 0 by "more than 50%").</p>
+    <div class="tw"><table><tr><th></th><th>Coef.</th><th>Robust SE</th></tr>
+    <tr><td>diffSpend</td><td>0.00114</td><td>0.000099</td></tr>
+    <tr><td>expendA</td><td>−0.00017</td><td>0.00013</td></tr>
+    <tr><td>prtystrA</td><td>0.0070</td><td>0.0024</td></tr>
+    <tr><td>democA</td><td>0.187</td><td>0.052</td></tr>
+    <tr><td>_cons</td><td>0.072</td><td>0.134</td></tr></table></div>
+    <p>Holding A's own spending, party strength and party fixed, each extra <b>$1,000</b> by which A outspends B raises the probability A wins by <b>0.114 percentage points</b> (t = 11.5).</p>
+    <p><b>Outspending by $100,000</b> (diffSpend = 100 vs. 0): 100 × 0.00114 = <b>+11.4 percentage points</b>. In the LPM that's the same at every starting point (constant effect, <a href="#l13">L13</a> Stop 5).</p></div></div></details>
+  <details><summary>7. Predictions below 0 or above 1.</summary><div class="body"><div class="ans">
+    <p>The scatter shows winA on two horizontal lines (0 and 1) with p̂ spread across them. <b>28 of 173</b> predictions are outside [0, 1]: <b>18 below 0</b>, <b>10 above 1</b>.</p>
+    <p>They're the lopsided-spending races. Most extreme below: WI-5 (−0.94; B spent $1.28M vs. A's $197K), FL-4 (−0.59), OH-6 (−0.46), WA-1 (−0.28). Most extreme above: CA-40 (1.59; A spent $1.11M vs. $48K), CA-5 (1.34), CO-2 (1.22), CA-3 (1.22). A straight line keeps rising past 1 when the spending gap gets large (<a href="#l13">L13</a> applicants C and D).</p></div></div></details>
+  <details><summary>8. Fraction correctly predicted (LPM).</summary><div class="body"><div class="ans"><p><b>160 of 173 = 92.5%</b>.</p></div></div></details>
+  <details><summary>9. Probit: can you read the diffSpend coefficient as a probability change?</summary><div class="body"><div class="ans">
+    <p>Probit diffSpend = <b>0.0081</b> (robust SE 0.0014, z = 5.85). <b>No</b>: it's the change in the index z per $1,000, not in the probability (<a href="#l13">L13</a> Stop 7). Directly you can read the <b>sign</b> (outspending raises the chance of winning) and the <b>significance</b> (z = 5.85 &gt; 1.96). The size in probability terms needs Φ at two values, or the marginal effect.</p></div></div></details>
+  <details><summary>10. Probit/logit predictions, fraction correct, AMEs. Different stories?</summary><div class="body"><div class="ans">
+    <p><b>Probit:</b> 0 predictions outside [0, 1] (Φ can't leave it); <b>161 of 173 = 93.1%</b> correct. <b>Logit:</b> also <b>93.1%</b> (logit diffSpend = 0.0156, SE 0.0031).</p>
+    <div class="tw"><table><tr><th>diffSpend</th><th>LPM</th><th>Probit AME</th><th>Logit AME</th></tr>
+    <tr><td>per $1,000</td><td>0.00114</td><td>0.00092 (SE 0.00009)</td><td>0.00087 (SE 0.00008)</td></tr>
+    <tr><td>per $100,000</td><td>11.4 pts</td><td>9.2 pts</td><td>8.7 pts</td></tr></table></div>
+    <p><b>Same story:</b> outspending the opponent raises the chance of winning, significantly, by roughly 9–11 points per $100K on average. The probit and logit AMEs are close; the LPM is a bit larger and gives impossible predictions for the lopsided races. Probit/logit only beat the LPM slightly in classification (161 vs. 160). As in L13: the models differ in <b>shape</b>, not in the average effect. Logit coefficients are about 2 × probit (0.0156 / 0.0081) because the z scales differ.</p></div></div></details>
+
+  <h3>Problem 2 · Gender pay gaps and educational returns</h3>
+  <div class="tw"><table>
+  <tr><th>Part</th><th>Concept being tested</th><th>Where taught</th><th>Formulas / tools</th></tr>
+  <tr><td>1</td><td>Interaction of two dummies; mean of a 0/1 variable is a share</td><td><a href="#l12">L12</a></td><td>F × B = 1 only if both are 1</td></tr>
+  <tr><td>2–4</td><td>Log-linear interpretation; separate regressions by group</td><td><a href="#l8">L8</a>, <a href="#l11">L11</a></td><td>100 × β̂ ≈ % difference</td></tr>
+  <tr><td>5</td><td>Reading β₁, β₂, β₃ in a dummy × dummy model; combining coefficients</td><td><a href="#l12">L12</a> interactions</td><td>Gap for grads = β₁ + β₃; return for women = β₂ + β₃</td></tr>
+  <tr><td>6</td><td>t-test of one coefficient vs. joint F-test</td><td><a href="#l12">L12</a> F-test</td><td><code>test female female_bachelor</code></td></tr>
+  </table></div>
+<pre><code>use CPS2015, clear
+generate ln_ahe = ln(ahe)
+generate female_bachelor = female*bachelor
+summarize female bachelor female_bachelor
+regress ln_ahe female bachelor, robust
+regress ln_ahe female if bachelor==0, robust
+regress ln_ahe female if bachelor==1, robust
+regress ln_ahe female bachelor female_bachelor, robust
+test female female_bachelor
+lincom female + female_bachelor      // gap for college grads
+lincom bachelor + female_bachelor    // college return for women</code></pre>
+  <details><summary>1. Means of female, bachelor, female_bachelor.</summary><div class="body"><div class="ans">
+    <p>n = 7,098. female <b>0.417</b>, bachelor <b>0.526</b>, female_bachelor <b>0.256</b>.</p>
+    <p>The product works because it's 1 only when <i>both</i> dummies are 1 (1 × 1); any 0 makes it 0. Its mean is the <b>share of the sample who are college-educated women: 25.6%</b>.</p></div></div></details>
+  <details><summary>2. The four regressions in one table.</summary><div class="body"><div class="ans">
+    <div class="tw"><table><tr><th></th><th>(i) All</th><th>(ii) No degree</th><th>(iii) Bachelor's</th><th>(iv) Interaction</th></tr>
+    <tr><th>female</th><td>−0.182<br><span class="small">(0.012)</span></td><td>−0.189<br><span class="small">(0.016)</span></td><td>−0.176<br><span class="small">(0.016)</span></td><td>−0.189<br><span class="small">(0.016)</span></td></tr>
+    <tr><th>bachelor</th><td>0.462<br><span class="small">(0.012)</span></td><td></td><td></td><td>0.457<br><span class="small">(0.016)</span></td></tr>
+    <tr><th>female × bachelor</th><td></td><td></td><td></td><td>0.013<br><span class="small">(0.023)</span></td></tr>
+    <tr><th>_cons</th><td>2.746<br><span class="small">(0.009)</span></td><td>2.748<br><span class="small">(0.010)</span></td><td>3.205<br><span class="small">(0.012)</span></td><td>2.748<br><span class="small">(0.010)</span></td></tr>
+    <tr><th>n</th><td>7,098</td><td>3,365</td><td>3,733</td><td>7,098</td></tr>
+    <tr><th>R²</th><td>0.192</td><td>0.037</td><td>0.030</td><td>0.192</td></tr></table></div></div></div></details>
+  <details><summary>3. Interpret β̂₁ in model (i).</summary><div class="body"><div class="ans"><p>Comparing workers with the <b>same education</b>, women earn about <b>18.2% less</b> per hour than men (log points; the exact percent is 100(e<sup>−0.182</sup> − 1) = −16.7%). t ≈ −15.7. The model forces this gap to be the same with and without a degree.</p></div></div></details>
+  <details><summary>4. Compare the gaps for non-college (ii) and college (iii) workers.</summary><div class="body"><div class="ans"><p>−18.9% without a degree vs. −17.6% with one. The gap is only <b>1.3 points smaller</b> for college graduates: education barely changes the gender gap in this sample. Whether that 1.3 is real is exactly the test in 6(a).</p></div></div></details>
+  <details><summary>5. Interpret β̂₁, β̂₂, β̂₃ in model (iv); combine coefficients.</summary><div class="body"><div class="ans">
+    <ul>
+      <li><b>β̂₀ = 2.748:</b> mean ln(ahe) of men without a degree (the base group).</li>
+      <li><b>β̂₁ = −0.189:</b> gender gap among workers <b>without</b> a degree. Identical to model (ii), because (iv) fits each of the four cells' means exactly.</li>
+      <li><b>β̂₂ = 0.457:</b> college premium for <b>men</b>: about 46% higher hourly earnings.</li>
+      <li><b>β̂₃ = 0.013:</b> the <b>difference</b> in the gender gap between graduates and non-graduates (equivalently, how much larger the college premium is for women).</li>
+    </ul>
+    <p>Gender gap for college grads: <b>β̂₁ + β̂₃ = −0.176</b> (= model iii; SE 0.016). College return for women: <b>β̂₂ + β̂₃ = 0.470</b> (SE 0.017).</p></div></div></details>
+  <details><summary>6(a). Is the gender gap different by degree? (5%)</summary><div class="body"><div class="ans"><p>H₀: β₃ = 0 vs. H₁: β₃ ≠ 0. t = 0.013/0.023 = <b>0.56</b>, p = 0.58. |t| &lt; 1.96: <b>fail to reject</b>. No evidence the gap differs by education.</p></div></div></details>
+  <details><summary>6(b). No gender gap at either education level: joint test.</summary><div class="body"><div class="ans">
+    <p>Gap without a degree = β₁; with a degree = β₁ + β₃. Both zero ⇔ <b>H₀: β₁ = 0 and β₃ = 0</b> (q = 2). F = <b>126.0</b>, p ≈ 0 (≈ 10⁻⁵⁴): <b>reject</b>.</p>
+    <p>Why joint: H₀ restricts two coefficients at once. Two separate t-tests at 5% would reject a true H₀ more than 5% of the time, and ignore that β̂₁ and β̂₃ are correlated (they share the non-college men as the base group). The F-test handles both (<a href="#l12">L12</a>). Note a single t-test on β₃ (part a) asks a different question: whether the two gaps are <i>equal</i>, not whether they're zero.</p></div></div></details>
+
+  <h3>Problem 3 · Omitted variable bias in a world you build</h3>
+  <div class="tw"><table>
+  <tr><th>Part</th><th>Concept being tested</th><th>Where taught</th><th>Formulas / tools</th></tr>
+  <tr><td>1–2</td><td>Short vs. long regression; predicting the bias from the model</td><td><a href="#l10">L10</a></td><td>\(\hat\beta_1^{short}\xrightarrow{p}\beta_1+\beta_2\frac{\mathrm{cov}(X,W)}{\mathrm{var}(X)}\); var(aW + e) = a² var(W) + var(e)</td></tr>
+  <tr><td>3–4</td><td>Sampling distribution; unbiased vs. consistent; SE shrinks like 1/√n</td><td><a href="#l9">L9</a></td><td>Unbiased: mean of β̂ = β at fixed n. Consistent: β̂ → β as n → ∞</td></tr>
+  <tr><td>5</td><td>The two conditions for OVB; precision cost/benefit of a control</td><td><a href="#l10">L10</a>, <a href="#l11">L11</a> imperfect multicollinearity</td><td>\(\mathrm{SE}(\hat\beta_1)\approx\frac{\sigma_u}{\sqrt n\,\sigma_{X}}\)</td></tr>
+  </table></div>
+  <details><summary>1. One sample of 10,000: short vs. long.</summary><div class="body"><div class="ans"><p>My draw: short slope <b>0.80</b>, long slope <b>2.01</b>. The <b>long</b> regression recovers β₁ = 2.</p></div></div></details>
+  <details><summary>2. Predict the short regression from the equations.</summary><div class="body"><div class="ans">
+    <p>cov(X, W) = cov(−0.5W + e, W) = −0.5 var(W) = <b>−0.5</b>. var(X) = 0.25 var(W) + var(e) = <b>1.25</b>.</p>
+    \[\hat\beta_1^{short}\xrightarrow{p}2+3\times\frac{-0.5}{1.25}=2-1.2=\mathbf{0.8}\]
+    <p>Matches part 1. The bias is <b>negative</b>: sleep raises the score (+3) but is negatively correlated with study (−0.5). Students who study more sleep less, so the short regression credits study with sleep's loss: (+) × (−) = (−).</p></div></div></details>
+  <details><summary>3. 1,000 samples at n = 50, 500, 5,000: the table.</summary><div class="body"><div class="ans">
+    <div class="tw"><table><tr><th>n</th><th>Short: mean</th><th>Short: SD</th><th>Long: mean</th><th>Long: SD</th></tr>
+    <tr><td>50</td><td>0.80</td><td>0.357</td><td>2.00</td><td>0.145</td></tr>
+    <tr><td>500</td><td>0.79</td><td>0.114</td><td>2.00</td><td>0.046</td></tr>
+    <tr><td>5,000</td><td>0.80</td><td>0.037</td><td>2.00</td><td>0.014</td></tr></table></div>
+    <p class="small">Python simulation, seed 1234. Your table will differ slightly; theory gives short SD ≈ √(8.2/(1.25n)) and long SD ≈ 1/√n.</p></div></div></details>
+  <details><summary>4(a). Is the long slope unbiased? Consistent? Which numbers say so?</summary><div class="body"><div class="ans"><p><b>Unbiased:</b> the <b>mean</b> column is 2.00 at every n, even n = 50. Unbiasedness is a statement about the average over samples at a fixed n. <b>Consistent:</b> the <b>SD</b> column shrinks toward 0 as n grows while the mean stays at 2, so each estimate gets ever closer to 2.</p></div></div></details>
+  <details><summary>4(b). By what factor does the SD fall when n × 10? Why?</summary><div class="body"><div class="ans"><p>About <b>√10 ≈ 3.16</b> (long: 0.145 → 0.046 → 0.014; short: 0.357 → 0.114 → 0.037). The SE of an OLS slope is proportional to 1/√n (<a href="#l9">L9</a>), so 10 times the data cuts it by √10.</p></div></div></details>
+  <details><summary>4(c). "OVB is a small-sample problem."</summary><div class="body"><div class="ans"><p><b>Wrong.</b> The short-regression mean stays at <b>0.80</b> for n = 50, 500 and 5,000. More data shrink the SD, so you get a more and more precise estimate of the <b>wrong number</b>. The bias comes from cov(X, u) ≠ 0, which doesn't depend on n: the short slope is inconsistent.</p></div></div></details>
+  <details><summary>5. Switch off each OVB condition (n = 500).</summary><div class="body"><div class="ans">
+    <div class="tw"><table><tr><th>Case</th><th>Short: mean (SD)</th><th>Long: mean (SD)</th></tr>
+    <tr><td>(a) X = e (study unrelated to sleep)</td><td>2.00 (0.142)</td><td>2.00 (0.045)</td></tr>
+    <tr><td>(b) Y = 1 + 2X + u (sleep irrelevant)</td><td>2.00 (0.040)</td><td>2.00 (0.044)</td></tr></table></div>
+    <p>OVB needs <b>both</b> conditions: W affects Y <b>and</b> W is correlated with X. Remove either and the short regression is <b>unbiased</b>.</p>
+    <p><b>(a) Long is much more precise.</b> W explains a lot of Y. Leaving it out puts 3W in the error (error variance 9 + 1 = 10 vs. 1), so the short SD is about √10 times bigger. A control that predicts Y but not X costs no bias and buys precision.</p>
+    <p><b>(b) Short is slightly more precise.</b> W adds nothing to Y, but it's correlated with X, so controlling for it removes some of X's variation (var(X | W) = 1 vs. var(X) = 1.25): SD 1/√(500 × 1.25) = 0.040 vs. 1/√500 = 0.045. That's the cost of imperfect multicollinearity (<a href="#l11">L11</a>).</p></div></div></details>
+
+  <h3>Problem 4 · Employment transitions in the Great Recession</h3>
+  <div class="tw"><table>
+  <tr><th>Part</th><th>Concept being tested</th><th>Where taught</th><th>Formulas / tools</th></tr>
+  <tr><td>1</td><td>CI for a proportion</td><td><a href="#l4">L4</a></td><td>\(\hat p\pm1.96\sqrt{\hat p(1-\hat p)/n}\)</td></tr>
+  <tr><td>2</td><td>LPM with a quadratic; joint test; peak and marginal effects</td><td><a href="#l12">L12</a> polynomials, <a href="#l13">L13</a></td><td>Peak at \(-\hat\beta_1/(2\hat\beta_2)\); Δ from a to a+1 = \(\hat\beta_1+\hat\beta_2(2a+1)\)</td></tr>
+  <tr><td>3</td><td>Adding controls as an OVB check; reference categories; changing samples</td><td><a href="#l10">L10</a>, <a href="#l11">L11</a></td><td>Do the age coefficients move?</td></tr>
+  <tr><td>4</td><td>Dummy variable trap; joint F-test on a group of dummies</td><td><a href="#l11">L11</a>, <a href="#l12">L12</a></td><td>q = number of dummies included</td></tr>
+  </table></div>
+<pre><code>use employment_08_09, clear
+summarize employed
+generate age2 = age^2
+regress employed age age2, robust
+test age age2
+generate earn100 = earnwke/100
+regress employed age age2, robust
+regress employed age age2 educ_hs educ_somecol educ_aa educ_bac educ_adv, robust
+regress employed age age2 educ_hs-educ_adv female i.race married, robust
+regress employed age age2 educ_hs-educ_adv female i.race married ne_states so_states ce_states, robust
+regress employed age age2 educ_hs-educ_adv female i.race married ne_states so_states ce_states earn100, robust
+regress employed age age2 educ_lths educ_hs educ_somecol educ_aa educ_bac educ_adv, robust
+regress employed age age2 educ_hs educ_somecol educ_aa educ_bac educ_adv, robust
+test educ_hs educ_somecol educ_aa educ_bac educ_adv</code></pre>
+  <details><summary>1. Share still employed and a 95% CI.</summary><div class="body"><div class="ans"><p>p̂ = 4,738 / 5,412 = <b>0.875</b>. SE = √(0.875 × 0.125 / 5,412) = 0.0045. CI: 0.875 ± 1.96 × 0.0045 = <b>[0.867, 0.884]</b>.</p></div></div></details>
+  <details><summary>2(a)–(b). Did age matter? Is it nonlinear?</summary><div class="body"><div class="ans">
+    <p>\(\widehat{Employed}=0.3075+0.02830\,Age-0.000327\,Age^2\) (SEs 0.0033 and 0.0000388).</p>
+    <p><b>(a)</b> Age enters twice, so H₀: β₁ = β₂ = 0 (q = 2). F = <b>37.5</b>, p ≈ 0: age significantly affected employment.</p>
+    <p><b>(b)</b> H₀: β₂ = 0. t = −0.000327/0.0000388 = <b>−8.42</b>: reject. The relationship is nonlinear, an inverted U.</p></div></div></details>
+  <details><summary>2(c). Predicted probability at 20, 40, 60.</summary><div class="body"><div class="ans"><p>Age 20: <b>0.742</b>. Age 40: <b>0.916</b>. Age 60: <b>0.828</b>. (Plug into the fitted equation; use the unrounded coefficients or the rounding wrecks the answer.)</p></div></div></details>
+  <details><summary>2(d). Peak age; change 20→21 and 60→61.</summary><div class="body"><div class="ans"><p>Peak at −0.02830 / (2 × −0.000327) = <b>43.3 years</b>. 20 → 21: <b>+1.5 points</b>. 60 → 61: <b>−1.1 points</b>. Same calculation as the L12 pay-and-age example.</p></div></div></details>
+  <details><summary>3(a). The five-column table.</summary><div class="body"><div class="ans">
+    <div class="tw"><table><tr><th></th><th>(1)</th><th>(2)</th><th>(3)</th><th>(4)</th><th>(5)</th></tr>
+    <tr><th>age</th><td>0.0283</td><td>0.0276</td><td>0.0274</td><td>0.0276</td><td>0.0249</td></tr>
+    <tr><th>age²</th><td>−0.00033</td><td>−0.00032</td><td>−0.00032</td><td>−0.00032</td><td>−0.00029</td></tr>
+    <tr><th>educ_hs</th><td></td><td>0.057</td><td>0.058</td><td>0.056</td><td>0.062</td></tr>
+    <tr><th>educ_somecol</th><td></td><td>0.082</td><td>0.084</td><td>0.083</td><td>0.083</td></tr>
+    <tr><th>educ_aa</th><td></td><td>0.095</td><td>0.097</td><td>0.095</td><td>0.090</td></tr>
+    <tr><th>educ_bac</th><td></td><td>0.079</td><td>0.078</td><td>0.078</td><td>0.070</td></tr>
+    <tr><th>educ_adv</th><td></td><td>0.100</td><td>0.099</td><td>0.098</td><td>0.082</td></tr>
+    <tr><th>female</th><td></td><td></td><td>−0.021</td><td>−0.022</td><td>−0.005</td></tr>
+    <tr><th>Black (race 2)</th><td></td><td></td><td>−0.049</td><td>−0.052</td><td>−0.038</td></tr>
+    <tr><th>Other race (3)</th><td></td><td></td><td>−0.023</td><td>−0.014</td><td>−0.005</td></tr>
+    <tr><th>married</th><td></td><td></td><td>0.004</td><td>0.003</td><td>−0.003</td></tr>
+    <tr><th>ne_states</th><td></td><td></td><td></td><td>0.011</td><td>0.017</td></tr>
+    <tr><th>so_states</th><td></td><td></td><td></td><td>0.026</td><td>0.024</td></tr>
+    <tr><th>ce_states</th><td></td><td></td><td></td><td>0.041</td><td>0.044</td></tr>
+    <tr><th>earnings ($100/wk)</th><td></td><td></td><td></td><td></td><td>0.0034</td></tr>
+    <tr><th>n</th><td>5,412</td><td>5,412</td><td>5,412</td><td>5,412</td><td><b>4,773</b></td></tr></table></div>
+    <p class="small">Robust SEs: age ≈ 0.0033–0.0036 in every column; education dummies ≈ 0.023–0.027; female 0.009–0.010; Black 0.018–0.019; regions 0.013–0.015; earnings 0.0010. Base groups: less than HS, white, western states. Column 5 loses 639 workers with missing earnings.</p></div></div></details>
+  <details><summary>3(b). Are the age conclusions robust?</summary><div class="body"><div class="ans"><p><b>Yes.</b> The age coefficient barely moves (0.0283 → 0.0274–0.0276 → 0.0249) and the peak stays at about 43 in every column. The added controls aren't strongly correlated with age, so leaving them out caused little OVB. The small drop in (5) mixes two things, the earnings control and a <b>different sample</b> (4,773 workers), so don't read it as pure OVB.</p></div></div></details>
+  <details><summary>3(c). Who was hurt most?</summary><div class="body"><div class="ans">
+    <ul>
+      <li><b>Young workers</b> most of all (−17 points at 20 vs. 40), and to a lesser degree workers near 60.</li>
+      <li><b>Workers without a high school diploma:</b> every education group was 6–10 points more likely to keep a job.</li>
+      <li><b>Black workers:</b> about 5 points less likely than white workers with the same characteristics (4 points after earnings).</li>
+      <li><b>Western states:</b> central states +4 points, the South +2.6 (regions jointly significant, F = 3.94, p = 0.008).</li>
+      <li><b>Low earners:</b> +0.34 points per $100/week. The female gap (−2 points) disappears once earnings are held fixed, so women's higher job loss goes with their lower earnings.</li>
+      <li>Married status: no detectable difference.</li>
+    </ul>
+    <p>These are associations holding the other variables fixed, not causal effects.</p></div></div></details>
+  <details><summary>4(a). Why leave out one education dummy?</summary><div class="body"><div class="ans"><p>Every worker is in exactly one of the six categories, so the six dummies <b>add up to 1 = the intercept's hidden regressor</b>: perfect multicollinearity, the dummy variable trap (<a href="#l11">L11</a>). With all six, Stata drops one ("<i>omitted because of collinearity</i>"); R returns <code>NA</code> for the last one. The coefficients on the rest are then gaps relative to the dropped category.</p></div></div></details>
+  <details><summary>4(b). Did education matter? Joint test.</summary><div class="body"><div class="ans"><p>With less-than-HS as the base: H₀: β<sub>hs</sub> = β<sub>somecol</sub> = β<sub>aa</sub> = β<sub>bac</sub> = β<sub>adv</sub> = 0, <b>q = 5</b> restrictions. F = <b>5.22</b>, p = 0.0001 &lt; 0.05: <b>reject</b>. Education made a difference to keeping a job.</p></div></div></details>
+
+  <h3>Problem 5 · Siblings, birth order and the return to schooling</h3>
+  <div class="tw"><table>
+  <tr><th>Part</th><th>Concept being tested</th><th>Where taught</th><th>Formulas / tools</th></tr>
+  <tr><td>1</td><td>Log-linear interpretation; OVB from ability</td><td><a href="#l8">L8</a>, <a href="#l10">L10</a></td><td>100 × β̂ ≈ % per year</td></tr>
+  <tr><td>2–4</td><td>Relevance, exogeneity (as good as random + exclusion), first stage, reduced form, Wald ratio</td><td><a href="#l14">L14</a> Stops 5, 9–10</td><td>\(\hat\beta_1^{IV}=\hat\gamma_1/\hat\pi_1\); <code>ivregress 2sls</code></td></tr>
+  <tr><td>5–6</td><td>Comparing OLS and IV; ways exclusion fails; measurement error</td><td><a href="#l14">L14</a> Stops 4, 12</td><td>Attenuation: \(\sigma_X^2/(\sigma_X^2+\sigma_v^2)\)</td></tr>
+  <tr><td>7</td><td>A second instrument; agreement ≠ validity</td><td><a href="#l14">L14</a></td><td>Same steps with brthord</td></tr>
+  </table></div>
+<pre><code>use wage2, clear
+regress lwage educ, robust
+regress educ sibs, robust                  // first stage
+regress lwage sibs, robust                 // reduced form
+display _b[sibs]                           // then divide by the first stage
+ivregress 2sls lwage (educ = sibs), robust
+regress educ brthord, robust
+ivregress 2sls lwage (educ = brthord), robust</code></pre>
+  <details><summary>1. OLS of lwage on educ.</summary><div class="body"><div class="ans"><p>\(\widehat{lwage}=5.973+0.0598\,educ\) (SE 0.0061). One more year of education goes with about <b>6.0% higher</b> monthly earnings. Not causal: <b>ability</b>, motivation and family background are in u and correlated with education, so cov(educ, u) ≠ 0 (OVB, <a href="#l10">L10</a>). Education may also be measured with error.</p></div></div></details>
+  <details><summary>2(a). The two requirements for sibs.</summary><div class="body"><div class="ans">
+    <p><b>Relevance:</b> the number of siblings is correlated with years of education, cov(sibs, educ) ≠ 0.</p>
+    <p><b>Exogeneity:</b> sibs is unrelated to everything else that sets wages, cov(sibs, u) = 0. That has two parts (<a href="#l14">L14</a>): <b>as good as random</b> (family size isn't related to ability or family background), and <b>exclusion</b> (having more siblings affects a man's wage <i>only</i> through how much schooling he gets).</p></div></div></details>
+  <details><summary>2(b). First stage.</summary><div class="body"><div class="ans"><p>\(\widehat{educ}=14.14-0.228\,sibs\) (SE 0.028, t = −8.08). Each extra sibling goes with about <b>0.23 fewer years</b> of education. Economic argument: parents' money and time get split among more children (the quantity–quality trade-off), so each child gets less schooling. This regression speaks to <b>relevance</b>, the only testable condition. It's strong: F = t² ≈ 65.</p></div></div></details>
+  <details><summary>3. Reduced form.</summary><div class="body"><div class="ans"><p>\(\widehat{lwage}=6.861-0.0279\,sibs\) (SE 0.0055). Each extra sibling goes with about <b>2.8% lower</b> earnings. It measures the <b>total</b> effect of sibs on wages through every channel. It does <b>not</b> measure the return to education: a sibling isn't a year of school. Plugging sibs in for educ would give you this number, the effect of a sibling. IV rescales it by how much a sibling changes education.</p></div></div></details>
+  <details><summary>4. IV by hand and with ivregress.</summary><div class="body"><div class="ans">
+    \[\hat\beta_1^{IV}=\frac{\hat\gamma_1}{\hat\pi_1}=\frac{-0.0279}{-0.2279}=\mathbf{0.122}\]
+    <p><code>ivregress 2sls lwage (educ = sibs), robust</code> gives the same <b>0.122</b> (robust SE ≈ 0.025). Interpretation: one more year of education raises monthly earnings by about <b>12.2%</b>, for men whose schooling is shifted by family size, <i>if</i> sibs is a valid instrument.</p></div></div></details>
+  <details><summary>5. Does OLS vs. IV match the ability story? Two reasons IV could be larger.</summary><div class="body"><div class="ans">
+    <p><b>No.</b> If OLS were biased up by ability, IV should be <b>smaller</b> than OLS. Instead IV (0.122) is about <b>twice</b> OLS (0.060). Reasons:</p>
+    <ol>
+      <li><b>sibs fails exclusion.</b> If big families also lower wages directly (less family wealth and fewer connections), the reduced form overstates the education channel. Dividing an inflated numerator by the first stage inflates IV.</li>
+      <li><b>Measurement error in educ.</b> It biases OLS <b>toward zero</b> (<a href="#l14">L14</a> Reason 3). IV with a valid instrument isn't attenuated, so IV &gt; OLS even with no ability bias.</li>
+      <li><b>Different people.</b> IV measures the return for men whose schooling responds to family size (e.g. credit-constrained families). Their return can be higher than the average return OLS picks up.</li>
+    </ol></div></div></details>
+  <details><summary>6. An omitted variable that breaks exclusion.</summary><div class="body"><div class="ans"><p><b>Family income or wealth:</b> bigger families have less per child, and that lowers wages through connections, neighborhoods and inheritance, not only through schooling. Others: <b>parents' education</b> (in this data, mothers' education falls 0.36 years per sibling), and <b>ability</b> (IQ is in the dataset and falls about 1.9 points per sibling, so sibs isn't even as good as random with respect to the very variable the IV was supposed to get around).</p></div></div></details>
+  <details><summary>7(a). educ and brthord.</summary><div class="body"><div class="ans"><p>Later-born children may get fewer family resources and less parental time per child, and a high birth order requires a big family. \(\widehat{educ}=14.15-0.283\,brthord\) (SE 0.042, t = −6.66, n = 852): a <b>significant negative</b> relationship, about 0.28 fewer years per place in the birth order.</p></div></div></details>
+  <details><summary>7(b). brthord as the instrument. Does agreement show validity?</summary><div class="body"><div class="ans">
+    <p>IV = <b>0.131</b> (robust SE ≈ 0.031, n = 852): one more year of education raises earnings by about <b>13%</b>. Close to the sibs estimate (0.122).</p>
+    <p><b>Agreement doesn't show validity.</b> Exclusion can't be tested (<a href="#l14">L14</a>). Both instruments are tied to <b>family size</b> (a 4th-born has at least 3 siblings), so they likely share the same violation, e.g. less family wealth per child. Two instruments biased the same way can agree on the same wrong number.</p></div></div></details>
+
+  <div class="tip"><p>The IV questions on the final follow Problem 5's pattern: name Z, X, Y; state relevance (point to the first stage) and exogeneity (as good as random <i>and</i> exclusion, both argued); compute reduced form ÷ first stage; then say how exclusion could fail.</p></div>
 </section>
 
 <section class="block" id="review">
