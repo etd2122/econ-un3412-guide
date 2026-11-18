@@ -219,7 +219,9 @@ details:hover{border-color:color-mix(in srgb,var(--accent) 30%,var(--rule))}
     <li><a href="#l12"><span class="n">L12</span>F-tests, interactions, polynomials</a></li>
     <li><a href="#l13"><span class="n">L13</span>Binary outcomes</a></li>
     <li><a href="#l14"><span class="n">L14</span>Instrumental variables</a></li>
-    <li><a href="#ahead"><span class="n">→</span>Next: two-stage least squares</a></li>
+    <li><a href="#l15"><span class="n">L15</span>Two-stage least squares</a></li>
+    <li><a href="#l16"><span class="n">L16</span>Panel data, fixed effects</a></li>
+    <li><a href="#ahead"><span class="n">→</span>Next: diff-in-diff</a></li>
   </ul>
   <h4>Answers</h4>
   <ul>
@@ -1576,7 +1578,7 @@ linearHypothesis(fit, c("mt = 0", "ms = 0"), white.adjust = "hc1")
 </section>
 
 <section class="block" id="l14">
-  <p class="eyebrow">Lecture 14 · Wed Nov 11 · Final material <span class="pill">New</span></p>
+  <p class="eyebrow">Lecture 14 · Wed Nov 11 · Final material</p>
   <h2>Instrumental variables</h2>
   <p class="lede">Lecture 13 ended on the hole in every regression with controls: what if something that matters <b>isn't in the data</b>? Today's answer: find a variable that moves X for reasons that have nothing to do with u, and use only that part of X. The running question is whether one opioid prescription in the emergency room causes long-term use. Reading: S&amp;W 12.1; Mastering 'Metrics ch. 3; Eichmeyer &amp; Zhang (2022).</p>
 
@@ -1798,14 +1800,422 @@ regress longterm prescribed i.diagnosis age illnesses pain, robust</code></pre>
   <details><summary>Does "more data" fix OLS when E(u | X) ≠ 0?</summary><div class="body"><div class="ans"><p>No. OLS converges to β₁ + bias, not β₁. More data shrink the SE around the wrong number (the 2-million-visit simulation has SE 0.05 on a biased 5.5).</p></div></div></details>
 </section>
 
+<section class="block" id="l15">
+  <p class="eyebrow">Lecture 15 · Mon Nov 16 · Final material <span class="pill">New</span></p>
+  <h2>Two-stage least squares (2SLS)</h2>
+  <p class="lede">Lecture 14 got β₁ from a coin-flip instrument by dividing two differences in means. Most instruments aren't coin flips: a tax rate, a distance, rainfall take many values. Today's tool, two-stage least squares, handles any instrument, adds controls, and gives correct standard errors. The running question: how much does a higher cigarette price cut smoking? Reading: S&amp;W 12.1–12.3.</p>
+
+  <div class="journey">
+  <div class="stop"><p class="sl">Stop 1 · Three equations</p>
+    <p>Every IV problem has the same three regressions. Learn to write all three from Z, X and Y alone.</p>
+    <div class="tw"><table><tr><th>Name</th><th>Equation</th><th>What it says</th></tr>
+    <tr><td><b>Structural</b></td><td>\(Y_i=\beta_0+\beta_1X_i+u_i\)</td><td>β₁ is what we want; X is correlated with u</td></tr>
+    <tr><td><b>First stage</b></td><td>\(X_i=\pi_0+\pi_1Z_i+v_i\)</td><td>the instrument moves X</td></tr>
+    <tr><td><b>Reduced form</b></td><td>\(Y_i=\gamma_0+\gamma_1Z_i+\varepsilon_i\)</td><td>the instrument moves Y</td></tr></table></div>
+    <details><summary>Slide question: which of the three can OLS estimate?</summary><div class="body"><div class="ans">
+      <p>The <b>first stage</b> and the <b>reduced form</b>. Their regressor is Z, and a valid Z is unrelated to the error (that's exogeneity), so OLS is fine for both.</p>
+      <p>Not the <b>structural</b> equation: its regressor is X, and X is correlated with u. That was the whole problem in Lecture 14.</p></div></div></details>
+    <p><b>Linking them.</b> Substitute the first stage into the structural equation:</p>
+    \[Y_i=\beta_0+\beta_1(\pi_0+\pi_1Z_i+v_i)+u_i=\underbrace{(\beta_0+\beta_1\pi_0)}_{\gamma_0}+\underbrace{\beta_1\pi_1}_{\gamma_1}Z_i+\underbrace{(\beta_1v_i+u_i)}_{\varepsilon_i}\]
+    <p>So \(\gamma_1=\beta_1\pi_1\): the effect of Z on Y is the effect of Z on X times the effect of X on Y. Rearranged, \(\beta_1=\gamma_1/\pi_1\).</p>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 2 · From differences in means to slopes</p>
+    <p>KIPP (Lecture 14): with a binary Z, each slope is a difference in means.</p>
+    \[\hat\beta_1=\frac{\hat\gamma_1}{\hat\pi_1}=\frac{0.355\ \ (\text{math score, winners − losers})}{0.741\ \ (\text{attendance, winners − losers})}=0.48\sigma\]
+    <details><summary>Slide question: a tax rate, a distance, rainfall take many values. What replaces the two differences in means?</summary><div class="body"><div class="ans">
+      <p>The two <b>OLS slopes</b> on Z. A slope is cov/var (Lecture 7), so</p>
+      \[\hat\gamma_1=\frac{s_{ZY}}{s_Z^2},\qquad\hat\pi_1=\frac{s_{ZX}}{s_Z^2},\qquad\hat\beta_1^{IV}=\frac{\hat\gamma_1}{\hat\pi_1}=\frac{s_{ZY}}{s_{ZX}}\]
+      <p>The \(s_Z^2\) cancels: the IV estimator is the covariance of Z with Y over the covariance of Z with X. With a 0/1 instrument these slopes are exactly the differences in means, so nothing changes for KIPP.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 3 · Cigarettes: does a higher price cut smoking?</p>
+    <p>The 48 continental states in 1995. Y = log packs sold per person, X = log real price of a pack. Both in logs, so the slope is an <b>elasticity</b> (Lecture 8).</p>
+    <p>OLS slope: <b>−1.21</b> (SE 0.19). A 1% higher price goes with 1.21% fewer packs.</p>
+    <details><summary>Slide question: is −1.21 the effect of price on smoking?</summary><div class="body"><div class="ans">
+      <p>No. Price is set by supply <i>and</i> demand, so causality runs both ways (Lecture 14, Reason 2). Where people have a stronger taste for smoking (in u), sellers can charge more. So price moves with u and \(E(u_i\mid X_i)\neq0\).</p>
+      <p>Other things in u that vary across states and go with price: income, anti-smoking norms, whether the state grows tobacco.</p></div></div></details>
+    <p><b>The instrument:</b> Z = the state's general <b>sales tax</b>, in cents per pack (0 to 10 cents).</p>
+    <ul>
+      <li><b>Relevance:</b> the tax is part of the price a smoker pays.</li>
+      <li><b>Exogeneity:</b> a general sales tax applies to everything a state sells; states set it to fund their budget, not in response to smoking.</li>
+    </ul>
+    <details><summary>Slide question: how could exogeneity fail?</summary><div class="body"><div class="ans">
+      <p><b>As good as random fails</b> if states that set high sales taxes differ in other ways that affect smoking: richer or more regulation-minded states may have higher taxes <i>and</i> fewer smokers; tobacco-growing states may keep taxes low and smoke more. Those traits are in u and correlate with Z.</p>
+      <p><b>Exclusion fails</b> if the sales tax affects smoking through something other than the cigarette price, e.g. a high sales tax raises the cost of everything, leaving less money to spend on cigarettes (an income channel).</p>
+      <p>This is why the slides use the <b>general</b> sales tax and not the cigarette-specific excise tax: a cigarette tax is often raised <i>because of</i> anti-smoking sentiment, which is in u. Controls (Stop 6) help with the first problem.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 4 · First stage and reduced form</p>
+    <div class="tw"><table><tr><th>Regression</th><th>Slope on sales tax</th><th>Reads as</th></tr>
+    <tr><td>First stage: log price on Z</td><td>\(\hat\pi_1=0.0307\)</td><td>each extra cent of sales tax → price about 3.1% higher</td></tr>
+    <tr><td>Reduced form: log packs on Z</td><td>\(\hat\gamma_1=-0.0333\)</td><td>each extra cent of sales tax → about 3.3% fewer packs</td></tr></table></div>
+    <details><summary>Slide question: what is β̂₁, the effect of log price on log packs?</summary><div class="body"><div class="ans">
+      \[\hat\beta_1=\frac{\hat\gamma_1}{\hat\pi_1}=\frac{-0.0333}{0.0307}=-1.08\]
+      <p>A 1% higher price <b>causes</b> about 1.08% fewer packs. The units work: (% packs per cent of tax) ÷ (% price per cent of tax) = % packs per % price, an elasticity.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 5 · Two-stage least squares: the idea</p>
+    <p>Dividing two slopes works with one instrument and no controls. 2SLS gets the same number a second way that extends to controls, several instruments and standard errors.</p>
+    <p><b>Split X into two parts.</b> Regress price on the sales tax and keep the fitted value:</p>
+    <div class="tw"><table><tr><th>price X =</th><th>X̂: the price the sales tax predicts</th><th>+ the rest of the price</th></tr>
+    <tr><td></td><td>moves <b>only because the tax moves</b>, so it's unrelated to the taste for smoking</td><td>includes sellers charging more where people want to smoke more (correlated with u)</td></tr></table></div>
+    <details><summary>Slide question: which part of the price should we use to estimate β₁?</summary><div class="body"><div class="ans"><p><b>X̂</b>, the part driven by the sales tax. It's a function of Z only, and Z is unrelated to u, so X̂ is unrelated to u. The rest of the price carries the endogeneity, so we throw it away. (Same idea as KIPP: use only the variation in attendance caused by the lottery.)</p></div></div></details>
+    <div class="callout"><p><b>2SLS in two steps.</b></p>
+    <p><b>Stage 1.</b> Regress X on Z. Keep the fitted values \(\hat X_i=\hat\pi_0+\hat\pi_1Z_i\).</p>
+    <p><b>Stage 2.</b> Regress Y on \(\hat X\). The slope is \(\hat\beta_1^{2SLS}\).</p></div>
+    <ul>
+      <li>X̂ depends only on Z, so it's unrelated to the error: OLS works in the second stage.</li>
+      <li>With one instrument, 2SLS = reduced form ÷ first stage, exactly.</li>
+      <li>In large samples \(\hat\beta_1^{2SLS}\) is close to β₁ (consistent) and approximately normal, so t-statistics and 95% CIs work as before (\(\hat\beta\pm1.96\,SE\)).</li>
+    </ul>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 6 · Adding controls</p>
+    <p>\(Y_i=\beta_0+\beta_1X_i+\beta_2W_i+u_i\), with X endogenous and W a control (exogenous).</p>
+    <ul>
+      <li><b>W goes in both stages:</b> regress X on Z <i>and W</i>, then Y on X̂ <i>and W</i>.</li>
+      <li>The two conditions are now read <b>holding W fixed</b>: among units with the same W, Z moves X and is unrelated to u.</li>
+      <li>Controls can be what makes an instrument credible. If richer states set different taxes and smoke differently, put income in W.</li>
+    </ul>
+<pre><code>* Stata: controls outside the parentheses, (endogenous = instrument) inside
+ivregress 2sls y w (x = z), robust
+
+# R: everything exogenous goes on both sides of the bar
+ivreg(y ~ x + w | z + w, data = d)</code></pre>
+    <div class="tip"><p>Leaving W out of stage 1 is a classic mistake: then X̂ is uncorrelated with W only by accident, and stage 2 can be biased. The software always puts every exogenous variable in the first stage for you.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 7 · Cigarettes in Stata and R</p>
+    <p class="small">Data: CigarettesSW. packs per person per year; price and taxes in cents per pack; cpi removes inflation; <code>salestax</code> = total tax − cigarette excise = the general sales tax part.</p>
+<pre><code>* Stata                                     # R
+keep if year == 1995                        cig &lt;- read.csv("CigarettesSW.csv")
+generate lpacks   = ln(packs)               cig &lt;- subset(cig, year == 1995)
+generate lprice   = ln(price/cpi)           cig &lt;- transform(cig,
+generate salestax = (taxs - tax)/cpi          lpacks   = log(packs),
+generate lincome  = ln(income/population/cpi) lprice   = log(price / cpi),
+                                              salestax = (taxs - tax) / cpi,
+                                              lincome  = log(income / population / cpi))</code></pre>
+    <div class="tw"><table><tr><th>Step</th><th>Stata</th><th>R</th><th>Slope (robust SE)</th></tr>
+    <tr><td>OLS</td><td><code>regress lpacks lprice, robust</code></td><td><code>lm(lpacks ~ lprice)</code> + <code>coeftest(..., vcovHC(type="HC1"))</code></td><td>lprice −1.213 (0.195)</td></tr>
+    <tr><td>Stage 1 by hand</td><td><code>regress lprice salestax, robust</code><br><code>predict lpricehat, xb</code></td><td><code>s1 &lt;- lm(lprice ~ salestax)</code><br><code>cig$lpricehat &lt;- fitted(s1)</code></td><td>salestax 0.0307 (0.0048), t = 6.35</td></tr>
+    <tr><td>Stage 2 by hand</td><td><code>regress lpacks lpricehat, robust</code></td><td><code>lm(lpacks ~ lpricehat)</code></td><td>lpricehat −1.084 (<b>0.334</b>)</td></tr>
+    <tr><td>2SLS in one command</td><td><code>ivregress 2sls lpacks (lprice = salestax), robust small</code></td><td><code>library(AER)</code><br><code>ivreg(lpacks ~ lprice | salestax)</code></td><td>lprice −1.084 (<b>0.319</b>)</td></tr>
+    <tr><td>2SLS + income</td><td><code>ivregress 2sls lpacks lincome (lprice = salestax), robust small</code></td><td><code>ivreg(lpacks ~ lprice + lincome | salestax + lincome)</code></td><td>lprice <b>−1.143</b> (0.372); lincome 0.215 (0.312)</td></tr></table></div>
+    <p class="small"><code>small</code> makes Stata report t and F instead of z and χ². <code>vcovHC(type = "HC1")</code> in R matches Stata's <code>robust</code>.</p>
+    <details><summary>Slide question: what is lpricehat?</summary><div class="body"><div class="ans"><p>The fitted value from stage 1: \(\widehat{lprice}_i=4.617+0.0307\,salestax_i\). The log price each state would have if price moved <b>only</b> with its sales tax. It's X̂.</p></div></div></details>
+    <details><summary>Slide question: what happened to the elasticity from OLS to stage 2?</summary><div class="body"><div class="ans">
+      <p>It moved from −1.21 to <b>−1.08</b>, and its SE grew from 0.19 to 0.33. Same trade-off as the opioid study (L14 Stop 12): IV uses only the tax-driven part of the price, so it's less precise.</p>
+      <p>Be careful about reading too much into −1.21 vs −1.08: the difference (0.13) is well inside the IV standard error, so the data can't tell us confidently how big the OLS bias is here.</p></div></div></details>
+    <details><summary>Slide question: compare <code>ivregress</code> with the second stage run by hand.</summary><div class="body"><div class="ans">
+      <p>Same coefficient (−1.0836), <b>different SE</b> (0.319 vs 0.334). By hand, stage 2 computes residuals as \(Y_i-\hat\beta_0-\hat\beta_1\hat X_i\), using X̂. The true error uses the <b>actual</b> X: \(Y_i-\hat\beta_0-\hat\beta_1X_i\). So the by-hand SE is wrong. Always use <code>ivregress</code>/<code>ivreg</code> for inference.</p>
+      <p>Same check the other way: reduced form ÷ first stage = −0.0333/0.0307 = −1.08. Three routes, one number.</p></div></div></details>
+    <details><summary>Slide question: interpret the coefficient on lprice with income as a control.</summary><div class="body"><div class="ans">
+      <p>Holding per-capita income fixed, a 1% increase in the price of cigarettes (the part driven by the sales tax) <b>causes</b> about a <b>1.14% decrease</b> in packs smoked per person. t = −3.07, 95% CI [−1.89, −0.39], so significantly different from 0. The point estimate says demand is elastic (|−1.14| &gt; 1), but the CI includes values above −1, so we can't rule out inelastic demand.</p>
+      <p>lincome isn't significant (t = 0.69), but it's there to make the instrument credible, not to be interpreted.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 8 · Weak instruments</p>
+    <p>Relevance comes in degrees. An instrument that barely moves X is <b>weak</b>.</p>
+    <ul>
+      <li><b>Measure:</b> the F-statistic on the instrument(s) in the <b>first stage</b> (Lecture 12's F-test). With one instrument, F = t².</li>
+      <li><b>Rule of thumb:</b> worry when the first-stage <b>F &lt; 10</b>.</li>
+    </ul>
+    <div class="tw"><table><tr><th>First stage</th><th>Slope</th><th>t</th><th>F</th></tr>
+    <tr><td>KIPP lottery: winning a seat → attending</td><td>0.741</td><td>20</td><td>401</td></tr>
+    <tr><td>Cigarettes: sales tax → log price, with income</td><td>0.027</td><td>6.69</td><td>44.7</td></tr></table></div>
+    <p class="small">Check: 20² ≈ 401 and 6.69² ≈ 44.7. Both far above 10. Stata: <code>regress lprice salestax lincome, robust</code> then <code>test salestax</code>.</p>
+    <p><b>A simulation where we know the answer.</b> 200 observations, true effect β₁ = 1, X correlated with u (OLS biased), Z valid. Run 2SLS on 2,000 random samples, once with a strong Z (first-stage F ≈ 50) and once with a weak Z (F ≈ 2).</p>
+    <details><summary>Slide question: Z is valid in both worlds. Should the estimates be close to 1 in both?</summary><div class="body"><div class="ans"><p>No. Validity is about the <b>center</b> in very large samples. With a weak instrument, at n = 200 the estimates are wild and their middle drifts toward the OLS estimate.</p></div></div></details>
+    <figure style="margin:12px 0">
+<svg viewBox="0 0 520 190" width="520" height="190" role="img" aria-label="Sketch of the simulation: with a strong instrument the 2SLS estimates form a tight pile centered on the truth, 1. With a weak instrument they are spread from below 0 to above 3, and the middle sits between the truth and the OLS estimate." style="max-width:100%;height:auto">
+<g font-size="11" fill="var(--muted)">
+<text x="125" y="14" text-anchor="middle" fill="var(--ok)" font-weight="700">strong Z, F ≈ 50</text>
+<text x="390" y="14" text-anchor="middle" fill="var(--fixc)" font-weight="700">weak Z, F ≈ 2</text>
+<line x1="20" y1="160" x2="235" y2="160" stroke="var(--rule)"/><line x1="285" y1="160" x2="500" y2="160" stroke="var(--rule)"/>
+<text x="30" y="176">−1</text><text x="73" y="176">0</text><text x="116" y="176">1</text><text x="159" y="176">2</text><text x="202" y="176">3</text>
+<text x="295" y="176">−1</text><text x="338" y="176">0</text><text x="381" y="176">1</text><text x="424" y="176">2</text><text x="467" y="176">3</text>
+<text x="128" y="188" text-anchor="middle">IV estimate</text><text x="392" y="188" text-anchor="middle">IV estimate</text>
+</g>
+<path d="M90,160 C105,160 108,40 120,40 C132,40 135,160 150,160 Z" fill="var(--ok-soft)" stroke="var(--ok)" stroke-width="1.5"/>
+<line x1="120" y1="28" x2="120" y2="160" stroke="var(--ink)" stroke-width="1.5"/><text x="124" y="34" font-size="10" fill="var(--ink)">truth</text>
+<path d="M295,160 C330,158 360,90 400,88 C440,90 470,150 500,158 L500,160 Z" fill="var(--fix-soft)" stroke="var(--fixc)" stroke-width="1.5"/>
+<line x1="385" y1="28" x2="385" y2="160" stroke="var(--ink)" stroke-width="1.5"/><text x="356" y="34" font-size="10" fill="var(--ink)">truth</text>
+<line x1="428" y1="28" x2="428" y2="160" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="4 3"/><text x="432" y="34" font-size="10" fill="var(--accent)">OLS</text>
+</svg>
+    <figcaption class="small">A sketch of the slide's two histograms (shapes not to scale). Strong: every sample lands near 1. Weak: some estimates are negative, some above 3, and the pile leans toward OLS.</figcaption></figure>
+    <div class="plain"><p class="ph">Why it happens</p><p>\(\hat\beta_1=\hat\gamma_1/\hat\pi_1\). With a weak instrument the true π₁ is near zero, so \(\hat\pi_1\) is often tiny (or the wrong sign) just from sampling noise. Dividing by a number close to zero blows up whatever noise is in the numerator. And when Z explains almost none of X, X̂ ends up fitting the sample's noise in X, which is the endogenous part, so 2SLS drifts back toward OLS.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 9 · Where instruments come from</p>
+    <p>Lotteries, weather, geography, rules, and people whose decisions are assigned at random.</p>
+    <div class="tw"><table><tr><th>Instrument Z</th><th>Treatment X</th><th>Outcome Y</th><th>Study</th></tr>
+    <tr><td>Charter school lottery</td><td>Attending KIPP</td><td>Test scores</td><td>Angrist et al. 2010</td></tr>
+    <tr><td>Vietnam draft lottery number</td><td>Military service</td><td>Earnings</td><td>Angrist 1990</td></tr>
+    <tr><td>Rainfall</td><td>Income growth</td><td>Civil conflict in Africa</td><td>Miguel, Satyanath &amp; Sergenti 2004</td></tr>
+    <tr><td>Number of rivers in a metro area</td><td>Number of school districts</td><td>School quality</td><td>Hoxby 2000</td></tr>
+    <tr><td>State sales tax</td><td>Price of cigarettes</td><td>Packs smoked</td><td>S&amp;W ch. 12</td></tr>
+    <tr><td>Maimonides' rule: classes split at 40</td><td>Class size</td><td>Test scores</td><td>Angrist &amp; Lavy 1999</td></tr>
+    <tr><td>Quarter of birth</td><td>Years of schooling</td><td>Earnings</td><td>Angrist &amp; Krueger 1991</td></tr>
+    <tr><td>The ER doctor on duty</td><td>Opioid prescription</td><td>Long-term opioid use</td><td>Eichmeyer &amp; Zhang 2022</td></tr>
+    <tr><td>The judge assigned to the case</td><td>Pretrial detention</td><td>Conviction, future crime</td><td>Dobbie, Goldin &amp; Yang 2018</td></tr></table></div>
+    <details><summary>Slide question (discuss, 5 min): find one way each instrument could reach Y other than through X. (a) Rainfall → income → conflict. (b) Draft number → military service → earnings. (c) Judge → pretrial detention → conviction.</summary><div class="body"><div class="ans">
+      <p><b>(a) Rainfall.</b> Heavy rain washes out roads and makes it physically harder to mount attacks or move troops. Rain also affects disease and food prices directly. Each is a path from Z to conflict that skips income.</p>
+      <p><b>(b) Draft lottery.</b> Men with low (likely-to-be-drafted) numbers could stay in college for a deferment, so the number raised schooling, which raises earnings, whether or not they served. Employers may also have been reluctant to hire or train men likely to be drafted.</p>
+      <p><b>(c) Judge.</b> A strict judge may also set higher bail, harsher conditions or signal a tougher stance in other rulings, and those can change plea decisions and conviction directly, not only through whether the defendant was held.</p>
+      <p>Pattern for the exam: name the <b>specific channel</b> from Z to Y and say it puts Z in u, so cov(Z, u) ≠ 0.</p></div></div></details>
+  </div>
+  </div>
+
+  <div class="mine"><p class="mh">What to remember</p><ul>
+    <li>Three equations: structural (OLS fails), first stage and reduced form (OLS works). \(\gamma_1=\beta_1\pi_1\).</li>
+    <li>With one instrument, \(\hat\beta_1\) = reduced form ÷ first stage = slope of Y on Z over slope of X on Z = \(s_{ZY}/s_{ZX}\).</li>
+    <li>2SLS: regress X on Z, keep X̂; regress Y on X̂. Controls go in <b>both</b> stages.</li>
+    <li>Use <code>ivregress 2sls</code> / <code>ivreg</code> for standard errors; by hand, the SEs are wrong (residuals use X̂ instead of X).</li>
+    <li>Check the first-stage F. Below 10 the estimate is erratic and leans toward OLS.</li>
+    <li>Cigarettes: OLS −1.21; IV −1.08; IV with income −1.14. A 1% higher price lowers smoking by about 1.14%.</li>
+  </ul></div>
+
+  <div class="trap"><p>(1) Running stage 2 by hand and reporting its SE. (2) Putting a control in stage 2 but not stage 1. (3) Saying a large first-stage F proves the instrument is <b>valid</b>: F checks relevance only; exogeneity still has to be argued. (4) Reading the reduced-form slope (−0.0333) as the price elasticity. (5) Forgetting that log–log slopes are elasticities: −1.14 means 1.14% per 1%, not 1.14 packs.</p></div>
+
+  <h3>Concept checks</h3>
+  <details><summary>The first stage slope is 0.5 and the reduced form slope is 2. What is the IV estimate?</summary><div class="body"><div class="ans"><p>\(\hat\beta_1=2/0.5=\mathbf 4\). One unit of Z moves X by 0.5 and Y by 2, so moving X by one unit moves Y by 4.</p></div></div></details>
+  <details><summary>Why is OLS fine in stage 2 when it wasn't fine on the original X?</summary><div class="body"><div class="ans"><p>X̂ is a function of Z only (\(\hat\pi_0+\hat\pi_1Z\)). Z is unrelated to u, so X̂ is too. The original X also contains the part of price that moves with u.</p></div></div></details>
+  <details><summary>A first-stage F of 4. What should you conclude?</summary><div class="body"><div class="ans"><p>The instrument is <b>weak</b> (F &lt; 10). The 2SLS estimate is unreliable: noisy, possibly far from β₁, and biased toward OLS. Usual t-tests and CIs can't be trusted. Look for a stronger instrument.</p></div></div></details>
+  <details><summary>You add income as a control. Where does it go?</summary><div class="body"><div class="ans"><p>In both stages: regress lprice on salestax <b>and</b> lincome, then lpacks on lprice-hat <b>and</b> lincome. In Stata it goes outside the parentheses; in R on both sides of the <code>|</code>.</p></div></div></details>
+  <details><summary>True or false: a first-stage F of 400 shows the instrument is valid.</summary><div class="body"><div class="ans"><p><b>False.</b> F measures <b>relevance</b> only. A strong Z can still violate exclusion or be related to u. (The earthquake in L14 is plausibly strong and still invalid.)</p></div></div></details>
+  <details><summary>Why did the by-hand stage 2 report SE 0.334 when <code>ivregress</code> reports 0.319?</summary><div class="body"><div class="ans"><p>The coefficient is identical, but stage 2 by hand builds residuals from X̂ instead of the actual X, so it estimates the error variance wrong. <code>ivregress</code> uses the right residuals.</p></div></div></details>
+  <details><summary>In a log–log 2SLS, β̂₁ = −0.4. Interpret.</summary><div class="body"><div class="ans"><p>A 1% increase in X causes about a 0.4% decrease in Y (inelastic, since |−0.4| &lt; 1), using only the variation in X driven by the instrument.</p></div></div></details>
+</section>
+
+<section class="block" id="l16">
+  <p class="eyebrow">Lecture 16 · Mon Nov 23 · Final material <span class="pill">New</span></p>
+  <h2>Panel data and fixed effects</h2>
+  <p class="lede">IV handles an omitted variable by finding outside variation in X. Panel data takes a different route: watch the <b>same</b> units over time, and anything about a unit that never changes drops out, even if you can't measure it. The running question: do beer taxes save lives? Reading: S&amp;W 10.1–10.5.</p>
+
+  <div class="journey">
+  <div class="stop"><p class="sl">Stop 1 · Panel data</p>
+    <p>An omitted variable biases a regression when it affects Y and is correlated with X (Lecture 10). Many are hard or impossible to measure. <b>Fixed effects</b> regression controls for some of them without observing them, but it needs <b>panel data</b>.</p>
+    <div class="tw"><table><tr><th>Cross-sectional data</th><th>Panel (longitudinal) data</th></tr>
+    <tr><td>One observation per entity; a single snapshot</td><td>Several observations per entity; followed over time</td></tr>
+    <tr><td>\(Y_i=\beta_0+\beta_1X_i+u_i\), \(i=1,\dots,n\)</td><td>\(Y_{it}=\beta_0+\beta_1X_{it}+u_{it}\), \(i=1,\dots,n\), \(t=1,\dots,T\)</td></tr></table></div>
+    <details><summary>Slide question: every entity is observed in every period. How many observations?</summary><div class="body"><div class="ans"><p><b>n × T</b> (a "balanced" panel). 50 states × 3 years = 150; 2,800 NYSE companies × 10 days = 28,000; 64 March Madness teams × 4 seasons = 256.</p></div></div></details>
+    <div class="plain"><p class="ph">Why watching an entity several times helps</p><p>We can see how each entity's variables <b>change</b>. An omitted variable that is constant over time can't explain changes in Y over time. So if we use only changes within an entity, those constant omitted variables can't bias us, measured or not.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 2 · Do beer taxes save lives?</p>
+    <p>About 41,000 people die on US roads each year; about 30% of those deaths involve a drunk driver. Sober drivers and passengers are killed too, and society pays the medical costs, which is a reason for government to step in.</p>
+    <p class="small">Theory: higher beer tax → less drinking → less drunk driving → fewer traffic deaths.</p>
+    <details><summary>Slide question: let β₁ be the effect of the beer tax (X) on traffic deaths (Y). What sign should we expect?</summary><div class="body"><div class="ans"><p><b>Negative.</b> A higher tax raises the price of beer, which lowers drinking and drunk driving.</p></div></div></details>
+    <p><b>The data:</b> 48 states, each observed every year 1982–1988.</p>
+    <ul>
+      <li>\(Y_{it}\) = traffic deaths per 10,000 residents in state i, year t (average 2.04).</li>
+      <li>\(X_{it}\) = tax on a case of beer, in dollars (average 0.51).</li>
+    </ul>
+    <details><summary>Slide question: how many observations?</summary><div class="body"><div class="ans"><p>48 × 7 = <b>336</b> state-years.</p></div></div></details>
+    <p><b>Cross-section regressions, one year at a time:</b></p>
+    <div class="tw"><table><tr><th>Year</th><th>Fitted line</th><th>SE of slope</th><th>t</th></tr>
+    <tr><td>1982</td><td>\(\widehat{FatalityRate}=2.01+0.15\,BeerTax\)</td><td>0.13</td><td>1.1</td></tr>
+    <tr><td>1988</td><td>\(\widehat{FatalityRate}=1.86+0.44\,BeerTax\)</td><td>0.13</td><td>3.4</td></tr></table></div>
+    <details><summary>Slide question: is the theory wrong? Do beer taxes lead to more deaths?</summary><div class="body"><div class="ans"><p>Not necessarily. The positive slope compares <b>different states</b>, and states with high beer taxes differ in many ways that also affect road deaths. That's omitted variable bias, not evidence that taxes kill.</p></div></div></details>
+    <details><summary>Slide question: what is in the error term \(u_i\)?</summary><div class="body"><div class="ans">
+      <div class="tw"><table><tr><th>Omitted variable</th><th>Why it's a problem</th></tr>
+      <tr><td>Urban density</td><td>more cars, more accidents, and different taxes</td></tr>
+      <tr><td>Local politics</td><td>pro-regulation states have high taxes and safe roads</td></tr>
+      <tr><td>Drinking culture and social norms</td><td>they shape both policies and behavior</td></tr>
+      <tr><td>Weather, road quality, public transit</td><td>they shape how much and how safely people drive</td></tr></table></div>
+      <p>Each is hard to measure and could affect both the fatality rate and the tax. The key observation: <b>most are roughly constant over time within a state</b>. Southern states with rural roads and low taxes (SC, GA, MS) stay that way from 1982 to 1988.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 3 · Before and after: subtract 1982 from 1988</p>
+    <p>Put the omitted variable in the model. Call \(W_i\) everything about state i that doesn't change over time (culture, density, roads):</p>
+    \[FatalityRate_{it}=\beta_0+\beta_1BeerTax_{it}+\delta W_i+u_{it}\]
+    <details><summary>Slide question: what is \(W_i\)?</summary><div class="body"><div class="ans"><p>A time-invariant state characteristic that affects fatalities, like drinking culture or urban density. Note the subscript: <b>i only, no t</b>. It's the same in 1982 and 1988.</p></div></div></details>
+    <p>Write the model for each year and subtract:</p>
+    \[\begin{aligned}\text{1988: }&amp;FatalityRate_{i,1988}=\beta_0+\beta_1BeerTax_{i,1988}+\delta W_i+u_{i,1988}\\ \text{1982: }&amp;FatalityRate_{i,1982}=\beta_0+\beta_1BeerTax_{i,1982}+\delta W_i+u_{i,1982}\\ \text{Difference: }&amp;\Delta FatalityRate_i=\beta_1\,\Delta BeerTax_i+(u_{i,1988}-u_{i,1982})\end{aligned}\]
+    <ul>
+      <li>Outcome: how much the fatality rate <b>changed</b>. Regressor: how much the beer tax <b>changed</b>.</li>
+      <li>β₀ and \(\delta W_i\) are eliminated by the subtraction. The slope is still β₁.</li>
+    </ul>
+    \[\widehat{\Delta FatalityRate}=-0.072-1.04\,\Delta BeerTax\qquad(\text{SE }0.36,\ t=-2.9)\]
+<pre><code>* Stata
+xtset state year                          // entity = state, time = year
+generate dfatality = fatality - L6.fatality   // L6. = value six years earlier
+generate dbeertax  = beertax  - L6.beertax    // exists only for 1988
+regress dfatality dbeertax, robust
+
+# R
+d &lt;- merge(subset(beer, year == 1982), subset(beer, year == 1988),
+           by = "state", suffixes = c("82", "88"))
+d$dfatality &lt;- d$fatality88 - d$fatality82
+d$dbeertax  &lt;- d$beertax88  - d$beertax82
+ch &lt;- lm(dfatality ~ dbeertax, data = d)
+coeftest(ch, vcov = vcovHC(ch, type = "HC1"))</code></pre>
+    <details><summary>Slide question: what happened in states that raised the beer tax?</summary><div class="body"><div class="ans">
+      <p>Their fatality rate <b>fell</b> relative to other states: each $1 increase in the beer tax goes with <b>1.04 fewer deaths per 10,000 residents</b>. The sign flipped from +0.44 to −1.04 once time-invariant state differences were removed.</p>
+      <p>The intercept, −0.072, is the change all states have in common (deaths fell everywhere by about 0.07 per 10,000, e.g. safer cars), and it's not significant (t = −1.10).</p>
+      <p>Sanity check on size: a $1 change is large (the average tax is $0.51), and 1.04 is half the average fatality rate. Treat the magnitude with some caution; the next steps shrink it.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 4 · State fixed effects: one intercept per state</p>
+    <p>With more than two years, one subtraction isn't enough. A <b>fixed effects</b> model gives each state its own intercept. Two equivalent ways to write it:</p>
+    <p><b>(1) With dummies:</b></p>
+    \[Y_{it}=\beta_0+\beta_1X_{it}+\underbrace{\gamma_{AZ}AZ_i+\gamma_{AR}AR_i+\cdots+\gamma_{WY}WY_i}_{n-1\text{ state dummy variables}}+u_{it}\]
+    <p class="small">\(AZ_i\) = 1 if the state is Arizona, 0 otherwise; and so on.</p>
+    <details><summary>Slide question: there are 48 states. Why only 47 dummies?</summary><div class="body"><div class="ans"><p>The <b>dummy variable trap</b> (Lecture 11). The 48 dummies always add to 1, the same as the constant regressor, so including all 48 and an intercept is perfect multicollinearity. Drop one (here Alabama); it becomes the base, and each γ is that state's difference from Alabama.</p></div></div></details>
+    <p><b>Why the dummies give each state its own intercept.</b> For Massachusetts every dummy is 0 except MA:</p>
+    \[Y_{MA,t}=\beta_0+\beta_1X_{MA,t}+\gamma_{MA}+u_{MA,t}=\underbrace{(\beta_0+\gamma_{MA})}_{\alpha_{MA}}+\beta_1X_{MA,t}+u_{MA,t}\]
+    <details><summary>Slide question: do the same for Indiana. Does the intercept change? Does the slope?</summary><div class="body"><div class="ans"><p>\(Y_{IN,t}=(\beta_0+\gamma_{IN})+\beta_1X_{IN,t}+u_{IN,t}=\alpha_{IN}+\beta_1X_{IN,t}+u_{IN,t}\). The <b>intercept changes</b> (α_IN ≠ α_MA). The <b>slope is the same</b> β₁ for every state: parallel lines.</p></div></div></details>
+    <p><b>(2) With a state intercept:</b></p>
+    \[Y_{it}=\underbrace{\alpha_i}_{\text{state-specific intercept}}+\beta_1X_{it}+u_{it},\qquad\alpha_i=\beta_0+\delta W_i\]
+    <p>\(\alpha_i\) is the constant ("fixed over time") effect of being in state i: the <b>state fixed effect</b>. It absorbs everything about the state that doesn't vary over time.</p>
+    <figure style="margin:12px 0">
+<svg viewBox="0 0 520 220" width="520" height="220" role="img" aria-label="Sketch: three states, each a cluster of points with a downward-sloping line through it. Indiana sits highest with the highest taxes, Massachusetts lowest. A single pooled line through all three clusters slopes upward. The fixed effects lines all slope downward and are parallel." style="max-width:100%;height:auto">
+<g font-size="11" fill="var(--muted)">
+<line x1="50" y1="190" x2="380" y2="190" stroke="var(--rule)"/><line x1="50" y1="20" x2="50" y2="190" stroke="var(--rule)"/>
+<text x="215" y="210" text-anchor="middle">tax on a case of beer</text>
+<text x="14" y="105" transform="rotate(-90 14,105)" text-anchor="middle">deaths per 10,000</text>
+</g>
+<g fill="var(--accent)"><circle cx="80" cy="168" r="3.5"/><circle cx="95" cy="160" r="3.5"/><circle cx="110" cy="170" r="3.5"/><circle cx="125" cy="164" r="3.5"/><circle cx="140" cy="174" r="3.5"/></g>
+<line x1="70" y1="160" x2="155" y2="176" stroke="var(--accent)" stroke-width="2"/>
+<text x="70" y="150" font-size="11" fill="var(--accent)" font-weight="700">Massachusetts</text>
+<g fill="var(--tip)"><circle cx="160" cy="108" r="3.5"/><circle cx="178" cy="100" r="3.5"/><circle cx="195" cy="112" r="3.5"/><circle cx="212" cy="106" r="3.5"/><circle cx="230" cy="118" r="3.5"/></g>
+<line x1="150" y1="100" x2="240" y2="118" stroke="var(--tip)" stroke-width="2"/>
+<text x="150" y="88" font-size="11" fill="var(--tip)" font-weight="700">Pennsylvania</text>
+<g fill="var(--ok)"><circle cx="250" cy="50" r="3.5"/><circle cx="268" cy="42" r="3.5"/><circle cx="285" cy="56" r="3.5"/><circle cx="302" cy="48" r="3.5"/><circle cx="320" cy="62" r="3.5"/></g>
+<line x1="240" y1="42" x2="330" y2="60" stroke="var(--ok)" stroke-width="2"/>
+<text x="268" y="30" font-size="11" fill="var(--ok)" font-weight="700">Indiana</text>
+<line x1="70" y1="180" x2="350" y2="40" stroke="var(--fixc)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<g font-size="11"><line x1="395" y1="60" x2="420" y2="60" stroke="var(--fixc)" stroke-width="1.5" stroke-dasharray="5 4"/><text x="425" y="64" fill="var(--fixc)">common</text><text x="425" y="78" fill="var(--fixc)">intercept:</text><text x="425" y="92" fill="var(--fixc)">slopes up</text>
+<line x1="395" y1="110" x2="420" y2="110" stroke="var(--ink)" stroke-width="2"/><text x="425" y="114" fill="var(--ink)">one intercept per</text><text x="425" y="128" fill="var(--ink)">state: each slopes</text><text x="425" y="142" fill="var(--ink)">down, same slope</text></g>
+</svg>
+    <figcaption class="small">A sketch of the slide's three-state picture (made-up points). A common intercept mixes differences <b>across</b> states with changes <b>over time</b>; the across-state differences (in this sketch the deadlier state also has the higher tax) push the line up. Fixed effects use only variation <b>within</b> each state over time. The before-and-after regression is the special case with two years.</figcaption></figure>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 5 · Same estimate, no dummies: deviations from state averages</p>
+    <ol>
+      <li>The model: \(Y_{it}=\alpha_i+\beta_1X_{it}+u_{it}\).</li>
+      <li>Average over the years for state i: \(\bar Y_i=\alpha_i+\beta_1\bar X_i+\bar u_i\).</li>
+      <li>Subtract: \(Y_{it}-\bar Y_i=\beta_1(X_{it}-\bar X_i)+(u_{it}-\bar u_i)\). The α_i is gone, just as W_i was gone in the regression in changes.</li>
+    </ol>
+    <p><b>Example:</b> Alabama's fatality rate in 1982 was 2.13; its 7-year average is 2.41. The deviation is 2.13 − 2.41 = −0.28.</p>
+    <p>Regressing deviations of Y on deviations of X gives <b>the same β̂₁</b> as the regression with 47 dummies. This is the "within" estimator (Stata calls it that).</p>
+<pre><code>* Stata
+xtreg fatality beertax, fe vce(cluster state)
+
+# R
+library(fixest)
+fe &lt;- feols(fatality ~ beertax | state, data = beer, cluster = ~state)
+summary(fe)</code></pre>
+    <div class="tw"><table><tr><th>Output line</th><th>Value</th><th>What it means</th></tr>
+    <tr><td><b>beertax</b></td><td>−0.656 (SE 0.292), t = −2.25, p = 0.029</td><td>the fixed effects estimate of β₁</td></tr>
+    <tr><td>_cons</td><td>2.377</td><td>the <b>average</b> of the 48 state intercepts α̂_i (not one state's intercept)</td></tr>
+    <tr><td>Number of groups / Obs per group</td><td>48 / 7</td><td>balanced panel: 336 = 48 × 7</td></tr>
+    <tr><td>R² within</td><td>0.041</td><td>share of the <b>within-state</b> variation in Y explained</td></tr>
+    <tr><td>corr(u_i, Xb)</td><td>−0.69</td><td>the state effects are strongly correlated with the beer tax: exactly why the pooled regression was biased</td></tr>
+    <tr><td>rho</td><td>0.93</td><td>93% of the error variance is the persistent state component</td></tr>
+    <tr><td>(Std. err. adjusted for 48 clusters)</td><td></td><td>clustered SEs (Stop 7)</td></tr></table></div>
+    <details><summary>Slide question: interpret the coefficient on beertax.</summary><div class="body"><div class="ans">
+      <p>Within a state over time, a <b>$1 higher tax on a case of beer</b> goes with <b>0.66 fewer traffic deaths per 10,000 residents</b>, holding fixed everything about the state that doesn't change over time. Significant at 5% (t = −2.25).</p>
+      <p>Size: 0.66 / 2.04 ≈ a third of the average rate. Again, $1 is a big change relative to the $0.51 average tax.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 6 · Time fixed effects</p>
+    <ul>
+      <li><b>State</b> fixed effects handle variables that differ across states and are fixed over time.</li>
+      <li><b>Time</b> fixed effects handle variables that vary over time and are the same in every state: safer cars, federal regulations, national attitudes toward drunk driving.</li>
+    </ul>
+    <p>Two ways again: T − 1 year dummies, or a separate intercept \(\lambda_t\) for each year:</p>
+    \[Y_{it}=\beta_0+\beta_1X_{it}+\delta_{1983}D1983_t+\cdots+\delta_{1988}D1988_t+u_{it}\qquad\Longleftrightarrow\qquad Y_{it}=\beta_1X_{it}+\lambda_t+u_{it}\]
+    <p><b>Both together: the two-way fixed effects model</b>, the workhorse of panel data research:</p>
+    \[Y_{it}=\beta_1X_{it}+\underbrace{\alpha_i}_{\text{state FE}}+\underbrace{\lambda_t}_{\text{time FE}}+u_{it}\]
+    <details><summary>Slide question: what omitted variables could still bias the estimate? What remains in \(u_{it}\)?</summary><div class="body"><div class="ans">
+      <p>Anything that varies <b>both across states and over time</b>: a state's economy (unemployment, income), changes in a state's drinking-age or DUI laws, police enforcement, road spending, a state anti-drunk-driving campaign. If any of these move with beer-tax changes, β̂₁ is still biased.</p>
+      <p>Example: a state that raises its beer tax in the same year it toughens DUI penalties. FE can't separate the two.</p></div></div></details>
+    <details><summary>Slide question: which can we add as a control with state and year FE? (a) the state's unemployment rate, (b) the state's land area, (c) the federal minimum wage.</summary><div class="body"><div class="ans">
+      <p><b>(a) Yes.</b> It varies over time and across states.</p>
+      <p><b>(b) No.</b> Constant over time → perfectly collinear with the state fixed effects (it's a combination of the state dummies). Already controlled for.</p>
+      <p><b>(c) No.</b> Same in every state each year → perfectly collinear with the year fixed effects. Already controlled for.</p>
+      <p>Stata or R will drop (b) and (c) automatically.</p></div></div></details>
+<pre><code>* Stata
+xtreg fatality beertax i.year, fe vce(cluster state)
+testparm i.year
+
+# R
+tw &lt;- feols(fatality ~ beertax + factor(year) | state, data = beer, cluster = ~state)
+summary(tw)
+wald(tw, "year")</code></pre>
+    <div class="tw"><table><tr><th>Variable</th><th>Coefficient</th><th>Clustered SE</th><th>t</th><th>p</th></tr>
+    <tr><td>beertax</td><td><b>−0.640</b></td><td>0.357</td><td>−1.79</td><td>0.080</td></tr>
+    <tr><td>1983</td><td>−0.080</td><td>0.035</td><td>−2.28</td><td>0.027</td></tr>
+    <tr><td>1984</td><td>−0.072</td><td>0.044</td><td>−1.65</td><td>0.106</td></tr>
+    <tr><td>1985</td><td>−0.124</td><td>0.046</td><td>−2.69</td><td>0.010</td></tr>
+    <tr><td>1986</td><td>−0.038</td><td>0.057</td><td>−0.66</td><td>0.510</td></tr>
+    <tr><td>1987</td><td>−0.051</td><td>0.064</td><td>−0.80</td><td>0.428</td></tr>
+    <tr><td>1988</td><td>−0.052</td><td>0.064</td><td>−0.80</td><td>0.425</td></tr></table></div>
+    <p class="small">1982 is the omitted base year. Joint test of the year effects: F(6, 47) = 4.22, Prob &gt; F = 0.0018.</p>
+    <details><summary>Slide question: what does the coefficient on 1985, −0.124, mean?</summary><div class="body"><div class="ans"><p>In 1985 the fatality rate was <b>0.124 deaths per 10,000 lower than in 1982</b> (the base year) in every state, holding the beer tax and the state fixed. It's a national shock common to all states (e.g. safer cars or a national campaign that year).</p></div></div></details>
+    <details><summary>Slide question: are the year effects jointly significant? State the null and decide.</summary><div class="body"><div class="ans"><p>H₀: δ₁₉₈₃ = δ₁₉₈₄ = ⋯ = δ₁₉₈₈ = 0 (no year effects; 6 restrictions). F = 4.22, p = 0.0018 &lt; 0.05, so <b>reject</b>: the year effects belong in the model. This is Lecture 12's F-test; individual t-tests (several insignificant) can't answer a joint question.</p></div></div></details>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 7 · Clustered standard errors</p>
+    <ul>
+      <li>Observations from the same state aren't independent over time. Massachusetts's errors in 1982 and 1983 are likely correlated, because unobserved factors persist. This is <b>serial correlation</b>.</li>
+      <li>Regular (even heteroskedasticity-robust) SEs treat the 336 observations as independent: they come out <b>too small</b>.</li>
+      <li><b>Fix: cluster by entity.</b> Clustered SEs allow any correlation <b>within</b> a state and assume independence <b>across</b> states. Stata: <code>vce(cluster state)</code>; R: <code>cluster = ~state</code>.</li>
+    </ul>
+    <div class="tw"><table><tr><th>State FE regression</th><th>SE of beertax</th><th>|t|</th></tr>
+    <tr><td>Robust, observations treated as independent</td><td>0.20</td><td>3.2</td></tr>
+    <tr><td>Clustered by state</td><td>0.29</td><td>2.25</td></tr></table></div>
+    <div class="plain"><p class="ph">Intuition</p><p>Seven years of Alabama aren't seven independent draws; they're closer to one draw seen seven times. Treating them as independent overstates how much information you have. Clustering counts the 48 states, not the 336 rows, as the independent units.</p></div>
+  </div>
+
+  <div class="stop"><p class="sl">Stop 8 · Five regressions, and how to report them</p>
+    <p class="small">336 state-year observations. Standard errors clustered by state in parentheses.</p>
+    <div class="tw"><table><tr><th></th><th>(1)</th><th>(2)</th><th>(3)</th><th>(4)</th><th>(5)</th></tr>
+    <tr><th>Beer tax</th><td>0.36<br><span class="small">(0.12)</span></td><td>−0.66<br><span class="small">(0.29)</span></td><td>0.37<br><span class="small">(0.12)</span></td><td>−0.64<br><span class="small">(0.36)</span></td><td>−0.46<br><span class="small">(0.31)</span></td></tr>
+    <tr><th>State fixed effects</th><td>no</td><td>yes</td><td>no</td><td>yes</td><td>yes</td></tr>
+    <tr><th>Year fixed effects</th><td>no</td><td>no</td><td>yes</td><td>yes</td><td>yes</td></tr>
+    <tr><th>Unemployment rate, log income</th><td>no</td><td>no</td><td>no</td><td>no</td><td>yes</td></tr></table></div>
+    <details><summary>Slide question: (i) write the equations for columns (1) and (4); (ii) what do the state and year FE account for; (iii) interpret column (4).</summary><div class="body"><div class="ans">
+      <p><b>(i)</b> Column (1), pooled OLS: \(FatalityRate_{it}=\beta_0+\beta_1BeerTax_{it}+u_{it}\). Column (4), two-way FE: \(FatalityRate_{it}=\beta_1BeerTax_{it}+\alpha_i+\lambda_t+u_{it}\).</p>
+      <p><b>(ii)</b> State FE: everything about a state that's constant 1982–88 (culture, density, roads, politics). Year FE: everything that hits all states in a given year (car safety, federal rules, national attitudes).</p>
+      <p><b>(iii)</b> Holding fixed time-invariant state traits and national year shocks, a $1 higher beer tax goes with <b>0.64 fewer deaths per 10,000</b>. t = −0.64/0.36 ≈ −1.78: significant at 10% but <b>not at 5%</b>.</p>
+      <p>Reading across: the sign flips from + to − once state FE go in (columns 1, 3 vs. 2, 4), so the positive cross-state correlation was state-level OVB. Year FE barely move the estimate. Adding economic controls shrinks it to −0.46, t ≈ −1.5, no longer significant: some of the "beer tax effect" was the state economy.</p></div></div></details>
+    <div class="callout"><p><b>Practical guidelines.</b> <b>Step 1:</b> start with the simplest regression (no FE, no controls). <b>Step 2:</b> add entity and time FE; document how the coefficient changes. <b>Step 3:</b> add controls one at a time and track the coefficient. Large changes point to important omitted variables. <b>Report every specification you try.</b> Beer taxes: 0.36 → −0.64 → −0.46.</p></div>
+  </div>
+  </div>
+
+  <div class="mine"><p class="mh">What to remember</p><ul>
+    <li>Panel data follow the same entities over time: \(Y_{it}\), n × T observations.</li>
+    <li>Entity fixed effects α_i give each entity its own intercept. They control for everything about the entity that's constant over time, <b>measured or unmeasured</b>.</li>
+    <li>Three equivalent ways to get the FE slope: n − 1 dummies, deviations from entity means, or (with two periods) changes.</li>
+    <li>Time fixed effects λ_t control for everything that changes over time and is common to all entities.</li>
+    <li>FE do <b>nothing</b> about omitted variables that change over time differently across entities.</li>
+    <li>Cluster standard errors by entity.</li>
+    <li>Beer taxes: +0.36 across states, −0.66 within states, −0.64 with year FE, −0.46 with economic controls.</li>
+  </ul></div>
+
+  <div class="trap"><p>(1) Thinking FE fix <b>all</b> omitted variables: only those constant over time (state FE) or common across entities (time FE). (2) Including all n dummies plus an intercept. (3) Trying to estimate the effect of a time-invariant variable (land area, region) with state FE: it's collinear and gets dropped. (4) Reading Stata's _cons in <code>xtreg, fe</code> as one state's intercept: it's the average of the α̂_i. (5) Reporting robust-but-unclustered SEs in a panel: too small.</p></div>
+
+  <h3>Concept checks</h3>
+  <details><summary>A panel of 100 firms over 5 years. How many observations, and how many firm dummies (with an intercept)?</summary><div class="body"><div class="ans"><p>100 × 5 = <b>500</b> observations; <b>99</b> firm dummies (one firm is the base).</p></div></div></details>
+  <details><summary>Why can't a state fixed effects regression tell you the effect of a state's latitude on traffic deaths?</summary><div class="body"><div class="ans"><p>Latitude never changes over time, so it's perfectly collinear with the state fixed effects. Its effect is absorbed into α_i and can't be separated out. FE identify β only from variables that change within a state.</p></div></div></details>
+  <details><summary>Pooled slope +0.44, FE slope −0.66. What does the sign flip tell you about the omitted state traits?</summary><div class="body"><div class="ans"><p>The omitted time-invariant traits are <b>positively</b> related to both the beer tax and fatalities (e.g. rural, Southern states have higher taxes and deadlier roads). That made pooled OLS biased <b>upward</b> (+ × + = upward, Lecture 10), enough to flip the sign. Stata's corr(u_i, Xb) = −0.69 points to the same thing: the state effects and the beer tax are strongly related.</p></div></div></details>
+  <details><summary>With two years, show that the changes regression and FE give the same β̂₁.</summary><div class="body"><div class="ans"><p>With T = 2, each deviation from the state mean is ±½ the change: \(Y_{i2}-\bar Y_i=\tfrac12\Delta Y_i\), and the same for X. Regressing ½ΔY on ½ΔX gives the same slope as ΔY on ΔX. (Exact only when the changes regression has no intercept; with year FE added the two match exactly.)</p></div></div></details>
+  <details><summary>Your state FE regression has robust SE 0.20 and clustered SE 0.29. Which do you report, and why are they different?</summary><div class="body"><div class="ans"><p><b>Clustered (0.29).</b> The errors for a state are correlated across years (serial correlation). Robust SEs assume independence across all 336 rows and so overstate the information, giving SEs that are too small.</p></div></div></details>
+  <details><summary>A state raises its beer tax the same year it starts sobriety checkpoints. Do state and year FE handle this?</summary><div class="body"><div class="ans"><p><b>No.</b> The checkpoints vary across states <i>and</i> over time, so they're in u_it, not in α_i or λ_t. They're correlated with the tax change, so β̂₁ picks up part of the checkpoint effect. You'd need to control for checkpoint policy directly.</p></div></div></details>
+  <details><summary>True or false: the before-and-after regression (1982 vs 1988) needs no intercept.</summary><div class="body"><div class="ans"><p><b>False</b> in practice. The intercept (−0.072) captures the change common to all states between 1982 and 1988, i.e. a time effect. Dropping it would force that common trend into β̂₁.</p></div></div></details>
+</section>
+
 <section class="block" id="ahead">
   <p class="eyebrow">Next lecture <span class="pill warn">Preview</span></p>
-  <h2>Still to come: two-stage least squares</h2>
-  <p class="lede">Lecture 14 built IV from a single binary instrument with no controls: reduced form ÷ first stage. Next time generalizes it. Reading: S&amp;W 12.2 and 12.3.</p>
+  <h2>Still to come: differences in differences</h2>
+  <p class="lede">Lecture 16 used panel data to remove anything constant about a state and anything common to a year. Next time applies the same logic to a policy that changes in some places and not others. Reading: Mastering 'Metrics ch. 5.</p>
   <ul>
-    <li><b>Two-stage least squares (2SLS):</b> instruments with controls, and standard errors.</li>
-    <li>Does economic hardship cause civil war? <b>Rainfall</b> as an instrument, in Stata.</li>
-    <li><b>Weak instruments</b> and the first-stage F.</li>
+    <li><b>Differences in differences:</b> a policy changes in some places and stays the same in others.</li>
+    <li>The minimum wage and employment in <b>New Jersey and Pennsylvania</b>.</li>
+    <li>Review the two-dummy interaction from <a href="#l12">Lecture 12, Stop 3</a> beforehand: diff-in-diff is that regression.</li>
   </ul>
   <div class="callout"><p><b>Syllabus check (Sep 7 version).</b> Problem Set 3 is listed as posted Mon Nov 9, due Mon Nov 16. Final exam: Registrar's period Dec 17–23, covering <b>S&amp;W chs 10–14 and Mastering 'Metrics chs 3–5</b>. Grade = 0.1·PS + 0.4·min(MT, FI) + 0.5·max(MT, FI), so a strong final counts for more than the midterm.</p></div>
 </section>
